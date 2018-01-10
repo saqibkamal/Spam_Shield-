@@ -2,6 +2,10 @@ package kamal.saqib.spamshield;
 
 
 
+import android.view.Display;
+
+import com.activeandroid.Model;
+
 import java.io.Serializable;
 
 
@@ -10,17 +14,17 @@ import java.io.Serializable;
  */
 
 public class Message implements Serializable {
-    public String sender_address,date,time,type,message,sender_name;
+    public String id,sender_address,date,time,type,message,timestamp;
 
-
-
-    public Message(String a, String b, String c, String d, String e){
+    public Message(String i,String a, String b, String c, String d,String e){
+        this.id=i;
         this.sender_address=a;
         this.date=b.substring(0,10);
         this.time=b.substring(11);
         this.type=c;
         this.message=d;
-        this.sender_name=e;
+        this.timestamp=e;
+
 
 
 

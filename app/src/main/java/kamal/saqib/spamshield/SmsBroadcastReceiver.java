@@ -28,7 +28,7 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
         if (intentExtras != null) {
             Object[] sms = (Object[]) intentExtras.get(SMS_BUNDLE);
             String smsMessageStr = "";
-            Message message=new Message(null,null,null,null,null);
+            Message message=new Message(null,null,null,null,null,null);
             for (int i = 0; i < sms.length; ++i) {
                 String format = intentExtras.getString("format");
                 SmsMessage smsMessage = SmsMessage.createFromPdu((byte[]) sms[i], format);
@@ -41,7 +41,7 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
                 smsMessageStr += "SMS From: " + address + "\n";
                 smsMessageStr += smsBody + "\n";
 
-                message=new Message(address,dateFromSms,"1",smsBody,address);
+                message=new Message(null,address,dateFromSms,"1",smsBody,date.toString());
             }
 
             MainActivity inst = MainActivity.instance();

@@ -15,7 +15,9 @@ import android.support.annotation.RequiresApi;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.AndroidException;
 import android.util.Log;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,15 +28,17 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintStream;
+import com.activeandroid.ActiveAndroid;
+import com.activeandroid.Model;
+import com.activeandroid.query.Select;
+
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
     private static final int READ_SMS_PERMISSIONS_REQUEST = 1;
@@ -43,14 +47,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Button send,read;
     ListView lv;
 
-
-    HashMap<String,ArrayList<Message>> map;
-    ArrayList<String> sendernumber,sendername;
+    HashMap<String,ArrayList<Message>> map_for_asyntask,map_for_db;
+    ArrayList<String> msgids_for_asynctask,msgids_for_db,msgsndrs,fmsgs;
     SimpleDateFormat simpleDateFormat;
     HashMap<String,String> contacts;
     private static MainActivity inst;
-
-
 
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -59,105 +60,90 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        getAllPermission();
+        try {
+            getAllPermission();
+        } finally {
+
+            send = (Button) findViewById(R.id.send);
+            read = (Button) findViewById(R.id.read);
 
 
-        send=(Button) findViewById(R.id.send);
-        read=(Button) findViewById(R.id.read);
+            send.setOnClickListener(this);
+            read.setOnClickListener(this);
+
+            lv = (ListView) findViewById(R.id.listview);
+
+            GetContact getContact = new GetContact();
+            getContact.execute();
+
+            GetAllMessages getAllMessages = new GetAllMessages();
+            getAllMessages.execute();
 
 
-        send.setOnClickListener(this);
-        read.setOnClickListener(this);
+            simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
+            contacts = new HashMap<>();
 
+            readfromdatabase();
 
-        lv=(ListView) findViewById(R.id.listview);
-
-
-        GetContact getContact= new GetContact();
-        getContact.execute();
-
-
-        map=new HashMap<>();
-
-        simpleDateFormat=new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
-        contacts=new HashMap<>();
-
-
-
-
-
-
-
-        refreshSmsInbox();
-
-
-
+        }
     }
 
-    public void refreshSmsInbox() {
-        sendernumber = new ArrayList<>();
-        sendername=new ArrayList<>();
 
-        ContentResolver contentResolver = getContentResolver();
-        Cursor smsInboxCursor = contentResolver.query(Uri.parse("content://sms"), null, null, null, null);
-        int indexBody = smsInboxCursor.getColumnIndex("body");
-        int indexAddress = smsInboxCursor.getColumnIndex("address");
-        int dateColumn = smsInboxCursor.getColumnIndex("date");
-        int typeColumn=smsInboxCursor.getColumnIndex("type");
-        Log.i("COLUMNS", Arrays.toString(smsInboxCursor.getColumnNames()));
+    public void readfromdatabase(){
+        map_for_db=new HashMap<>();
+        msgsndrs=new ArrayList<>();
+        fmsgs=new ArrayList<>();
+        ActiveAndroid.beginTransaction();
+        try{
 
+            List<msg_sqldb> msg_from_db = new Select("*")
+                    .from(msg_sqldb.class)
+                    .orderBy("timestamp DESC").execute();
 
+           for( msg_sqldb msgSqldb:msg_from_db){
+               String id=msgSqldb.msg_id;
+               String add=msgSqldb.address;
+               String dt=msgSqldb.date;
+               String tm=msgSqldb.time;
+               String tp=msgSqldb.type;
+               String mm=msgSqldb.message;
+               Long tmstmp=msgSqldb.timestamp;
 
-        if (indexBody < 0 || !smsInboxCursor.moveToFirst()) return;
+               String msg_sender=add;
 
+               if(msgsndrs.contains(msg_sender)){
+                   map_for_db.get(msg_sender).add(new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp)));
+               }
+               else{
+                   msgsndrs.add(msg_sender);
+                   ArrayList<Message> temp=new ArrayList<>();
+                   temp.add(new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp)));
+                   map_for_db.put(msg_sender,temp);
+                   fmsgs.add(mm);
+               }
+           }
+            lv.setAdapter(new CustomAdapter(this));
+            ActiveAndroid.setTransactionSuccessful();
 
-        do {
-            String sndrnmbr=smsInboxCursor.getString(indexAddress);
-            String msg=smsInboxCursor.getString(indexBody);
-            String date=smsInboxCursor.getString(dateColumn);
-            String type=smsInboxCursor.getString(typeColumn);
-            Long tt= Long.valueOf(date);
-            String dateFromSms = simpleDateFormat.format(new Date(tt));
+        }
+        finally {
+            ActiveAndroid.endTransaction();
+        }
 
-
-
-            if(!sendernumber.contains(sndrnmbr)) {
-                String sndrname=sndrnmbr;
-                if(contacts.containsKey(sndrnmbr))
-                    sndrname=contacts.get(sndrnmbr);
-
-                sendernumber.add(sndrnmbr);
-                sendername.add(sndrname);
-
-                Message message=new Message(sndrnmbr,dateFromSms,type,msg,sndrname);
-
-                ArrayList<Message> te=new ArrayList<>();
-                te.add(message);
-                map.put(sndrnmbr,te);
-            }
-            else{
-                String sndrname=map.get(sndrnmbr).get(0).sender_name;
-                Message message=new Message(sndrnmbr,dateFromSms,type,msg,sndrname);
-                map.get(sndrnmbr).add(message);
-            }
-        } while (smsInboxCursor.moveToNext());
-
-
-
-        lv.setAdapter(new CustomAdapter(this));
     }
 
     public  void updateInbox(Message message){
-        if(sendernumber.contains(message.sender_name))
-            message.sender_name=map.get(message.sender_address).get(0).sender_name;
+
         lv.setAdapter(new CustomAdapter(this));
     }
+
+
 
 
 
     public void read_msg(){
-        Intent i = new Intent(getBaseContext(), read_msg.class);
-        startActivity(i);
+       // Intent i = new Intent(getBaseContext(), read_msg.class);
+        //startActivity(i);
     }
     public void send_msg(){
         Intent i = new Intent(getBaseContext(), send_msg.class);
@@ -177,9 +163,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     public void  getAllPermission(){
-        getPermissionToReadSMS();
-        getPermissionToReadContacts();
+       getPermissionToReadSMS();
+       getPermissionToReadContacts();
         getPermissionToSendSMS();
 
     }
@@ -227,6 +214,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String permissions[],
@@ -236,6 +224,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if (grantResults.length == 1 &&
                     grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(this, "Read SMS permission granted", Toast.LENGTH_SHORT).show();
+               // getPermissionToSendSMS();
 
 
             } else {
@@ -248,6 +237,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if (grantResults.length == 1 &&
                     grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(this, "Send SMS permission granted", Toast.LENGTH_SHORT).show();
+                //getPermissionToReadContacts();
 
 
             } else {
@@ -279,6 +269,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         @Override
         protected Void doInBackground(String... strings) {
+
+            contacts=new HashMap<>();
 
             ContentResolver cr = getContentResolver();
             Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI,
@@ -318,7 +310,95 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         @Override
         protected void onPostExecute(Void aVoid) {
             Log.i("Completetd","yes");
-            refreshSmsInbox();
+
+        }
+    }
+
+    public class GetAllMessages extends AsyncTask<String,Void,Void>{
+
+        @Override
+        protected Void doInBackground(String... strings) {
+            map_for_asyntask=new HashMap<>();
+
+            msgids_for_asynctask=new ArrayList<>();
+
+            ContentResolver contentResolver = getContentResolver();
+            Cursor smsInboxCursor = contentResolver.query(Uri.parse("content://sms"), null, null, null, null);
+            int indexBody = smsInboxCursor.getColumnIndex("body");
+            int indexAddress = smsInboxCursor.getColumnIndex("address");
+            int dateColumn = smsInboxCursor.getColumnIndex("date");
+            int typeColumn=smsInboxCursor.getColumnIndex("type");
+            int typeid=smsInboxCursor.getColumnIndex("_id");
+            Log.i("COLUMNS", Arrays.toString(smsInboxCursor.getColumnNames()));
+
+            if (indexBody < 0 || !smsInboxCursor.moveToFirst()) return null;
+
+            do {
+                String sndrnmbr=smsInboxCursor.getString(indexAddress);
+                String msg=smsInboxCursor.getString(indexBody);
+                String date=smsInboxCursor.getString(dateColumn);
+                String type=smsInboxCursor.getString(typeColumn);
+                String id=smsInboxCursor.getString(typeid);
+                Long tt= Long.valueOf(date);
+                String dateFromSms = simpleDateFormat.format(new Date(tt));
+
+
+                msgids_for_asynctask.add(id);
+                Message message=new Message(id,sndrnmbr,dateFromSms,type,msg,date);
+
+
+                if(map_for_asyntask.get(sndrnmbr)!=null)
+                    map_for_asyntask.get(sndrnmbr).add(message);
+                else{
+                    ArrayList<Message> te=new ArrayList<>();
+                    te.add(message);
+                    map_for_asyntask.put(sndrnmbr,te);
+                }
+
+            } while (smsInboxCursor.moveToNext());
+
+
+            return null;
+        }
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            Log.i("Completeted","Mesage Updation");
+           UpdateDatabaseMessages updateDatabaseMessages=new UpdateDatabaseMessages();
+           updateDatabaseMessages.execute();
+
+        }
+    }
+
+    public class UpdateDatabaseMessages extends AsyncTask<String,Void,Void>{
+
+        @Override
+        protected Void doInBackground(String... strings) {
+            ActiveAndroid.beginTransaction();
+            try {
+                for (ArrayList<Message> tmpmsg : map_for_asyntask.values()) {
+                    for (int j = 0; j < tmpmsg.size(); j++) {
+                        Message mg = tmpmsg.get(j);
+                        String tmp_id = mg.id;
+                        if ((new Select()
+                                .from(msg_sqldb.class)
+                                .where("msg_id = ?", tmp_id)
+                                .execute()).size() == 0) {
+                            msg_sqldb msg_db = new msg_sqldb(tmp_id,mg.sender_address,mg.date,mg.time,mg.type,mg.message,mg.timestamp);
+                            msg_db.save();
+                        }
+                    }
+                }
+                ActiveAndroid.setTransactionSuccessful();
+            }
+            finally{
+                ActiveAndroid.endTransaction();
+            }
+            return null;
+        }
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            Log.i("Completeted","Database Updation");
+            readfromdatabase();
         }
     }
 
@@ -329,11 +409,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         private LayoutInflater inflater=null;
         public CustomAdapter(MainActivity mainActivity) {
             // TODO Auto-generated constructor stub
-            result=sendernumber;
+            result=msgsndrs;
             context=mainActivity;
-            imageId=new int[sendername.size()];
-            for(int i=0;i<sendername.size();i++)
-                imageId[i]=R.drawable.ic_alert;
+
+
             inflater = ( LayoutInflater )context.
                     getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         }
@@ -370,17 +449,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             holder.tv=(TextView) rowView.findViewById(R.id.phone_number);
             holder.fmsg=(TextView) rowView.findViewById(R.id.fmsgs);
             holder.img=(ImageView) rowView.findViewById(R.id.imageview);
-            holder.tv.setText(result.get(position));
-            holder.img.setImageResource(imageId[position]);
-            holder.fmsg.setText(map.get(result.get(position)).get(0).message);
+           holder.tv.setText(result.get(position));
+           holder.fmsg.setText(fmsgs.get(position));
+           String ph_no=result.get(position);
+           if(contacts.containsKey(ph_no))
+               holder.tv.setText(contacts.get(ph_no));
+            //holder.img.setImageResource(imageId[position]);
+
+
             rowView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    String p=sendername.get(position);
+                  String p=msgsndrs.get(position);
                     Intent in = new Intent(getBaseContext(), single_user_msg.class);
-                    Bundle args = new Bundle();
-                    args.putSerializable("ARRAYLIST",(Serializable)map.get(p));
-                    in.putExtra("BUNDLE",args);
+                   Bundle args = new Bundle();
+                   args.putSerializable("ARRAYLIST",(Serializable)map_for_db.get(p));
+                   in.putExtra("BUNDLE",args);
 
 
                     startActivity(in);

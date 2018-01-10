@@ -17,6 +17,10 @@ android {
         }
     }
 }
+repositories {
+    mavenCentral()
+    maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+}
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
@@ -26,6 +30,8 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
     compile 'com.klinkerapps:android-smsmms:4.3.0'
-    compile 'me.everything:providers-android:1.0.1'
+
+    compile 'com.michaelpardo:activeandroid:3.1.0-SNAPSHOT'
+
 
 }
