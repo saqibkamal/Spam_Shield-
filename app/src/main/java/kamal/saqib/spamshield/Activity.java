@@ -1,6 +1,7 @@
 package kamal.saqib.spamshield;
 
 import android.app.Application;
+import android.content.Intent;
 
 import com.activeandroid.ActiveAndroid;
 
@@ -13,6 +14,8 @@ public class Activity extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        startService(new Intent(this, MyService.class));
         ActiveAndroid.initialize(this);
+
     }
 }

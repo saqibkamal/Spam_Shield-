@@ -9,7 +9,9 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.os.Looper;
 import android.provider.ContactsContract;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v4.content.ContextCompat;
@@ -32,7 +34,28 @@ import com.activeandroid.ActiveAndroid;
 import com.activeandroid.Model;
 import com.activeandroid.query.Select;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicHeader;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.protocol.HTTP;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.Serializable;
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -72,6 +95,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             read.setOnClickListener(this);
 
             lv = (ListView) findViewById(R.id.listview);
+
+            sendJson("HELLO");
 
             GetContact getContact = new GetContact();
             getContact.execute();
@@ -134,7 +159,33 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public  void updateInbox(Message message){
 
+        if(msgsndrs.contains(message.sender_address)){
+            map_for_db.get(message.sender_address).add(message);
+        }
+        else{
+            msgsndrs.add(message.sender_address);
+            ArrayList<Message> temp=new ArrayList<>();
+            temp.add(message);
+            map_for_db.put(message.sender_address,temp);
+            fmsgs.add(message.message);
+        }
         lv.setAdapter(new CustomAdapter(this));
+    }
+
+    public void addnewmsgtodb(Message mg){
+        if ((new Select()
+                .from(msg_sqldb.class)
+                .where("msg_id = ?", mg.id)
+                .execute()).size() == 0) {
+            msg_sqldb msg_db = new msg_sqldb(mg.id,mg.sender_address,mg.date,mg.time,mg.type,mg.message,mg.timestamp);
+            msg_db.save();
+            Log.i("NEW ","msg received");
+            updateInbox(mg);
+        }
+    }
+    public void addtodb(Message mg){
+       msg_sqldb msgSqldb=new msg_sqldb(mg.id,mg.sender_address,mg.date,mg.time,mg.type,mg.message,mg.timestamp);
+       msgSqldb.save();
     }
 
 
@@ -483,6 +534,54 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onStart() {
         super.onStart();
         inst = this;
+    }
+
+    protected void sendJson(final String msg) {
+        Thread t = new Thread() {
+
+            public void run() {
+                Looper.prepare();
+                HttpClient httpclient;
+                HttpGet request;
+                HttpResponse response = null;
+                String result = "";
+                try{
+                    httpclient = new DefaultHttpClient();
+                    request = new HttpGet("http://10.0.2.2/init.php");
+                    HttpPost post = new HttpPost("http://10.0.2.2/init.php");
+                    String data= URLEncoder.encode("message","UTF-8")+"="+URLEncoder.encode(msg,"UTF-8");
+
+
+
+
+                    post.setEntity(new StringEntity(data));
+
+                    response = httpclient.execute(post);
+
+                   // response = httpclient.execute(request);
+                } catch (Exception e){
+                    result = "error1";
+                }
+
+                try{
+                    BufferedReader rd = new BufferedReader(new InputStreamReader(
+                            response.getEntity().getContent()));
+                    String line="";
+                    while((line = rd.readLine()) != null){
+                        result = result + line;
+                    }
+                    Log.i("msgr",result);
+                } catch(Exception e){
+                    result = "error2";
+                }
+
+                Log.i("msgr",result);
+                Looper.loop(); //Loop in the message queue
+            }
+        };
+
+        t.start();
+
     }
 
 

@@ -16,6 +16,16 @@ import java.io.Serializable;
 public class Message implements Serializable {
     public String id,sender_address,date,time,type,message,timestamp;
 
+    public Message(){
+        this.id=null;
+        this.sender_address=null;
+        this.date=null;
+        this.time=null;
+        this.type=null;
+        this.message=null;
+        this.timestamp=null;
+    }
+
     public Message(String i,String a, String b, String c, String d,String e){
         this.id=i;
         this.sender_address=a;
