@@ -102,7 +102,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             lv = (ListView) findViewById(R.id.listview);
 
-            //sendJson("HELLO");
+            sendJson("Shabdkosh | शब्दकोश : English Hindi Dictionary and Translation");
 
             GetContact getContact = new GetContact();
             getContact.execute();
@@ -588,17 +588,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 try{
                     httpclient = new DefaultHttpClient();
                     //request = new HttpGet("http://10.0.2.2/init.php");
-                    HttpPost post = new HttpPost("http://10.0.2.2/init.php");
-                    NameValuePair nameValuePair=new BasicNameValuePair("message",msg);
+                    HttpPost post = new HttpPost("http://10.0.2.2:5000/predict");
+                    //NameValuePair nameValuePair=new BasicNameValuePair("message",msg);
+                    JSONObject json = new JSONObject();
+                    json.put("message", msg);
+                    StringEntity se;
+                    se = new StringEntity(json.toString());
+                    post.setEntity(se);
                     //HttpPost httppost = new HttpPost("http://10.0.0.3/xampp/information.php?info="+nameValuePair);
-                    String data= URLEncoder.encode("message","UTF-8")+"="+URLEncoder.encode(msg,"UTF-8");
+                    //String data= URLEncoder.encode("message","UTF-8")+"="+URLEncoder.encode(msg,"UTF-8");
+
+                   //post.setHeader("Accept", "application/json");
+                    post.setHeader("Content-type", "application/json");
+                    //post.setHeader("Accept-Encoding", "gzip");
 
 
 
-
-                    post.setEntity(new StringEntity(data));
+                    //post.setEntity(new StringEntity(data));
 
                     response = httpclient.execute(post);
+                    Log.i("msgr","result");
 
                    //response = httpclient.execute(request);
                 } catch (Exception e){
