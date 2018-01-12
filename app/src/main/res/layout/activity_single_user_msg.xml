@@ -9,8 +9,23 @@
     <ListView
         android:id="@+id/list"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="550dp"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true" />
+    <EditText
+        android:layout_width="340dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/list"
+        android:id="@+id/msg_box"/>
+    <ImageView
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_below="@+id/list"
+        android:layout_marginLeft="13dp"
+        android:layout_marginStart="13dp"
+        android:layout_toEndOf="@+id/msg_box"
+        android:layout_toRightOf="@+id/msg_box"
+        android:src="@drawable/send_icon"
+        android:id="@+id/send"/>
 </RelativeLayout>

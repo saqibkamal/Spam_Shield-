@@ -1,10 +1,15 @@
 package kamal.saqib.spamshield;
 
 import android.Manifest;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.TaskStackBuilder;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -14,6 +19,7 @@ import android.provider.ContactsContract;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -96,7 +102,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             lv = (ListView) findViewById(R.id.listview);
 
-            sendJson("HELLO");
+            //sendJson("HELLO");
 
             GetContact getContact = new GetContact();
             getContact.execute();
@@ -172,10 +178,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         lv.setAdapter(new CustomAdapter(this));
     }
 
+
     public void addnewmsgtodb(Message mg){
+        shownotification(mg);
         if ((new Select()
                 .from(msg_sqldb.class)
-                .where("msg_id = ?", mg.id)
+                .where("address = ?", mg.sender_address)
+                .where("timestamp = ?",mg.timestamp)
+                .where("message = ?",mg.message)
                 .execute()).size() == 0) {
             msg_sqldb msg_db = new msg_sqldb(mg.id,mg.sender_address,mg.date,mg.time,mg.type,mg.message,mg.timestamp);
             msg_db.save();
@@ -183,16 +193,44 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             updateInbox(mg);
         }
     }
+
+
     public void addtodb(Message mg){
-       msg_sqldb msgSqldb=new msg_sqldb(mg.id,mg.sender_address,mg.date,mg.time,mg.type,mg.message,mg.timestamp);
-       msgSqldb.save();
+        shownotification(mg);
+        msg_sqldb msgSqldb=new msg_sqldb(mg.id,mg.sender_address,mg.date,mg.time,mg.type,mg.message,mg.timestamp);
+        msgSqldb.save();
+    }
+
+    public void addsendsmstodb(Message mg){
+        msg_sqldb msgSqldb=new msg_sqldb(mg.id,mg.sender_address,mg.date,mg.time,mg.type,mg.message,mg.timestamp);
+        msgSqldb.save();
+    }
+
+
+    public void shownotification(Message message) {
+        //PendingIntent pi = PendingIntent.getActivity(getApplicationContext(), 0, new Intent(getApplicationContext(), MainActivity.class), 0);
+       // Resources r = getResources();
+        Notification notification = new NotificationCompat.Builder(this)
+                .setTicker("New Message")
+               .setSmallIcon(android.R.drawable.stat_notify_sync)
+                .setContentTitle(message.sender_address)
+                .setContentText(message.message)
+                //.setContentIntent(pi)
+                .setAutoCancel(true)
+                .setPriority(Notification.PRIORITY_MAX)
+                .build();
+
+        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        notificationManager.notify(0, notification);
     }
 
 
 
 
 
+
     public void read_msg(){
+       // shownotification();
        // Intent i = new Intent(getBaseContext(), read_msg.class);
         //startActivity(i);
     }
@@ -432,7 +470,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         String tmp_id = mg.id;
                         if ((new Select()
                                 .from(msg_sqldb.class)
-                                .where("msg_id = ?", tmp_id)
+                                .where("address = ?", mg.sender_address)
+                                .where("timestamp = ?",mg.timestamp)
+                                .where("message = ?",mg.message)
                                 .execute()).size() == 0) {
                             msg_sqldb msg_db = new msg_sqldb(tmp_id,mg.sender_address,mg.date,mg.time,mg.type,mg.message,mg.timestamp);
                             msg_db.save();
@@ -547,8 +587,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 String result = "";
                 try{
                     httpclient = new DefaultHttpClient();
-                    request = new HttpGet("http://10.0.2.2/init.php");
+                    //request = new HttpGet("http://10.0.2.2/init.php");
                     HttpPost post = new HttpPost("http://10.0.2.2/init.php");
+                    NameValuePair nameValuePair=new BasicNameValuePair("message",msg);
+                    //HttpPost httppost = new HttpPost("http://10.0.0.3/xampp/information.php?info="+nameValuePair);
                     String data= URLEncoder.encode("message","UTF-8")+"="+URLEncoder.encode(msg,"UTF-8");
 
 
@@ -558,7 +600,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                     response = httpclient.execute(post);
 
-                   // response = httpclient.execute(request);
+                   //response = httpclient.execute(request);
                 } catch (Exception e){
                     result = "error1";
                 }
