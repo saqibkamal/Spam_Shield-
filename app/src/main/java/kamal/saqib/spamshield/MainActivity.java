@@ -4,29 +4,22 @@ import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.app.TaskStackBuilder;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.res.Resources;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
-import android.os.Looper;
 import android.provider.ContactsContract;
-import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.AndroidException;
 import android.util.Log;
-import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -257,23 +250,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void shownotification(Message message) {
         //PendingIntent pi = PendingIntent.getActivity(getApplicationContext(), 0, new Intent(getApplicationContext(), MainActivity.class), 0);
-       // Resources r = getResources();
-        String snd=message.sender_address;
-        if(contacts_for_db.containsKey(message.sender_address))
-            snd=contacts_for_db.get(message.sender_address);
+        // Resources r = getResources();
+        if (message.spam.equals("ham")) {
+            String snd = message.sender_address;
+            if (contacts_for_db.containsKey(message.sender_address))
+                snd = contacts_for_db.get(message.sender_address);
 
-        Notification notification = new NotificationCompat.Builder(this)
-                .setTicker("New Message")
-               .setSmallIcon(android.R.drawable.stat_notify_sync)
-                .setContentTitle(snd)
-                .setContentText(message.message)
-                //.setContentIntent(pi)
-                .setAutoCancel(true)
-                .setPriority(Notification.PRIORITY_MAX)
-                .build();
+            Notification notification = new NotificationCompat.Builder(this)
+                    .setTicker("New Message")
+                    .setSmallIcon(android.R.drawable.stat_notify_sync)
+                    .setContentTitle(snd)
+                    .setContentText(message.message)
+                    //.setContentIntent(pi)
+                    .setAutoCancel(true)
+                    .setPriority(Notification.PRIORITY_MAX)
+                    .build();
 
-        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        notificationManager.notify(0, notification);
+            NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            notificationManager.notify(0, notification);
+        }
     }
 
 
@@ -744,5 +739,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         readfromdatabase();
         }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        MainActivity mainActivity=new MainActivity();
 
+    }
 }
