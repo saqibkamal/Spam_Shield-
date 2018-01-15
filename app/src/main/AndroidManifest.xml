@@ -53,22 +53,20 @@
         <meta-data
             android:name="AA_DB_VERSION"
             android:value="2" />
+
         <meta-data
             android:name="AA_MODELS"
-            android:value="kamal.saqib.spamshield.msg_sqldb" />
+            android:value="kamal.saqib.spamshield.msg_sqldb,kamal.saqib.spamshield.cntcts_sqldb"
+            />
+
+
 
         <service
             android:name=".MyService"
             android:enabled="true"
             android:exported="true" />
 
-        <activity android:name=".Notification"
-            android:label="Details of notification"
-            android:parentActivityName=".MainActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".MainActivity"/>
-        </activity>
+
     </application>
 
 </manifest>

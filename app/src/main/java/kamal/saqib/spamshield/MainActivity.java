@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     HashMap<String,ArrayList<Message>> map_for_asyntask,map_for_db;
     ArrayList<String> msgids_for_asynctask,msgids_for_db,msgsndrs,fmsgs;
     SimpleDateFormat simpleDateFormat;
-    HashMap<String,String> contacts;
+    HashMap<String,String> contacts_for_db,contacts_for_asynctask;
     private static MainActivity inst;
 
 
@@ -102,7 +102,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             lv = (ListView) findViewById(R.id.listview);
 
-            sendJson("Shabdkosh | शब्दकोश : English Hindi Dictionary and Translation");
+            sendJson("hello");
 
             GetContact getContact = new GetContact();
             getContact.execute();
@@ -112,11 +112,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
             simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
-            contacts = new HashMap<>();
 
+            readcontactsfromdatabase();
             readfromdatabase();
 
         }
+    }
+
+    public void readcontactsfromdatabase(){
+        contacts_for_db=new HashMap<>();
+        ActiveAndroid.beginTransaction();
+        try{
+            List<cntcts_sqldb> cntctsSqldbs = new Select("*")
+                    .from(cntcts_sqldb.class)
+                    .execute();
+            for(cntcts_sqldb ct:cntctsSqldbs){
+                contacts_for_db.put(ct.number,ct.name);
+
+            }
+            ActiveAndroid.setTransactionSuccessful();
+        }
+        finally {
+            ActiveAndroid.endTransaction();
+        }
+
     }
 
 
@@ -359,7 +378,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         @Override
         protected Void doInBackground(String... strings) {
 
-            contacts=new HashMap<>();
+            contacts_for_asynctask=new HashMap<>();
 
             ContentResolver cr = getContentResolver();
             Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI,
@@ -383,8 +402,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             String phoneNo = pCur.getString(pCur.getColumnIndex(
                                     ContactsContract.CommonDataKinds.Phone.NUMBER));
 
-                            contacts.put(phoneNo,name);
-
+                            contacts_for_asynctask.put(phoneNo,name);
                         }
                         pCur.close();
                     }
@@ -399,6 +417,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         @Override
         protected void onPostExecute(Void aVoid) {
             Log.i("Completetd","yes");
+            UpdateDatabasecontacts updateDatabasecontacts=new UpdateDatabasecontacts();
+            updateDatabasecontacts.execute();
 
         }
     }
@@ -493,6 +513,40 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    public class UpdateDatabasecontacts extends AsyncTask<String,Void,Void>{
+
+        @Override
+        protected Void doInBackground(String... strings) {
+            ActiveAndroid.beginTransaction();
+            try {
+                String y,x;
+                for (String phn : contacts_for_asynctask.keySet()) {
+                        String nm= contacts_for_asynctask.get(phn);
+                        if ((new Select()
+                                .from(cntcts_sqldb.class)
+                                .where("name = ?", nm)
+                                .where("number = ?", phn)
+                                .execute()).size() == 0) {
+                            cntcts_sqldb cntctsSqldb=new cntcts_sqldb(nm,phn);
+                            cntctsSqldb.save();
+
+                        }
+                    }
+                ActiveAndroid.setTransactionSuccessful();
+            }
+            finally{
+                ActiveAndroid.endTransaction();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            Log.i("Completeted","Database phone Updation");
+            readcontactsfromdatabase();
+        }
+    }
+
     public class CustomAdapter extends BaseAdapter {
         ArrayList<String> result;
         Context context;
@@ -543,8 +597,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
            holder.tv.setText(result.get(position));
            holder.fmsg.setText(fmsgs.get(position));
            String ph_no=result.get(position);
-           if(contacts.containsKey(ph_no))
-               holder.tv.setText(contacts.get(ph_no));
+           if(contacts_for_db.containsKey(ph_no))
+               holder.tv.setText(contacts_for_db.get(ph_no));
             //holder.img.setImageResource(imageId[position]);
 
 
@@ -588,10 +642,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 try{
                     httpclient = new DefaultHttpClient();
                     //request = new HttpGet("http://10.0.2.2/init.php");
-                    HttpPost post = new HttpPost("http://10.0.2.2:5000/predict");
+                    HttpPost post = new HttpPost("https://spamshield.herokuapp.com/predict");
                     //NameValuePair nameValuePair=new BasicNameValuePair("message",msg);
                     JSONObject json = new JSONObject();
-                    json.put("message", msg);
+                    json.put("messagejson", msg);
                     StringEntity se;
                     se = new StringEntity(json.toString());
                     post.setEntity(se);
@@ -634,6 +688,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         t.start();
 
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        readcontactsfromdatabase();
+        readfromdatabase();
+        }
 
 
 }
