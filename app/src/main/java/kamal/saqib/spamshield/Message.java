@@ -14,7 +14,7 @@ import java.io.Serializable;
  */
 
 public class Message implements Serializable {
-    public String id,sender_address,date,time,type,message,timestamp;
+    public String id,sender_address,date,time,type,message,timestamp,spam;
 
     public Message(){
         this.id=null;
@@ -24,9 +24,10 @@ public class Message implements Serializable {
         this.type=null;
         this.message=null;
         this.timestamp=null;
+        this.spam="ham";
     }
 
-    public Message(String i,String a, String b, String c, String d,String e){
+    public Message(String i,String a, String b, String c, String d,String e,String spam){
         this.id=i;
         this.sender_address=a;
         this.date=b.substring(0,10);
@@ -34,6 +35,7 @@ public class Message implements Serializable {
         this.type=c;
         this.message=d;
         this.timestamp=e;
+        this.spam=spam;
 
 
 

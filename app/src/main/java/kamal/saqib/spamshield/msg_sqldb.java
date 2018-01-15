@@ -32,11 +32,14 @@ public class msg_sqldb extends Model {
     @Column(name = "timestamp")
     public Long timestamp;
 
+    @Column(name = "spam")
+    public String spam;
+
     public msg_sqldb() {
         super();
     }
 
-    public msg_sqldb(String id, String address,String date,String time,String type,String message,String timestamp) {
+    public msg_sqldb(String id, String address,String date,String time,String type,String message,String timestamp,String spam) {
         super();
         this.msg_id = id;
         this.address = address;
@@ -45,5 +48,6 @@ public class msg_sqldb extends Model {
         this.type=type;
         this.message=message;
         this.timestamp=Long.decode(timestamp);
+        this.spam=spam;
     }
 }

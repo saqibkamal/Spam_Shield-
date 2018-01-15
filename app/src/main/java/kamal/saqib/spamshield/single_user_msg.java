@@ -49,7 +49,7 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
         Bundle args = intent.getBundleExtra("BUNDLE");
         ArrayList<Message> msgs = (ArrayList<Message>) args.getSerializable("ARRAYLIST");
         for(int i=0;i<msgs.size();i++) {
-            arrayAdapter.add(msgs.get(i).message);
+            arrayAdapter.add(msgs.get(i).message+msgs.get(i).spam+msgs.get(i).type);
             phoneNo = msgs.get(i).sender_address;
         }
         sendButton.setOnClickListener(this);
@@ -96,7 +96,7 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
                             Random random =new Random();
                             int x=random.nextInt()+100000000;
                             Log.i("xyz",String.valueOf(x));
-                            Message mess=new Message(String.valueOf(x),phoneNo,dateFromSms,"2",message,ts);
+                            Message mess=new Message(String.valueOf(x),phoneNo,dateFromSms,"2",message,ts,"ham");
                             MainActivity inst = MainActivity.instance();
                             inst.addsendsmstodb(mess);
 

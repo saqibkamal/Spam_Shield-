@@ -1,6 +1,7 @@
 package kamal.saqib.spamshield;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -35,39 +36,24 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.activeandroid.ActiveAndroid;
-import com.activeandroid.Model;
 import com.activeandroid.query.Select;
-
 import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicHeader;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.protocol.HTTP;
 import org.json.JSONObject;
-
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.Serializable;
-import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import dmax.dialog.SpotsDialog;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
     private static final int READ_SMS_PERMISSIONS_REQUEST = 1;
@@ -76,8 +62,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Button send,read;
     ListView lv;
 
-    HashMap<String,ArrayList<Message>> map_for_asyntask,map_for_db;
-    ArrayList<String> msgids_for_asynctask,msgids_for_db,msgsndrs,fmsgs;
+    AlertDialog alertDialog;
+
+    HashMap<String,ArrayList<Message>> map_for_asyntask,smap_for_db,hmap_for_db;
+    ArrayList<String> msgids_for_asynctask,smsgsndrs,sfmsgs,hfmsgs,hmsgsndrs;
     SimpleDateFormat simpleDateFormat;
     HashMap<String,String> contacts_for_db,contacts_for_asynctask;
     private static MainActivity inst;
@@ -89,9 +77,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        try {
-            getAllPermission();
-        } finally {
+
+        alertDialog = new SpotsDialog(this);
+        alertDialog.show();
+
+
 
             send = (Button) findViewById(R.id.send);
             read = (Button) findViewById(R.id.read);
@@ -102,7 +92,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             lv = (ListView) findViewById(R.id.listview);
 
-            sendJson("hello");
+            //sendJson("hello");
 
             GetContact getContact = new GetContact();
             getContact.execute();
@@ -116,7 +106,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             readcontactsfromdatabase();
             readfromdatabase();
 
-        }
+
     }
 
     public void readcontactsfromdatabase(){
@@ -140,9 +130,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
     public void readfromdatabase(){
-        map_for_db=new HashMap<>();
-        msgsndrs=new ArrayList<>();
-        fmsgs=new ArrayList<>();
+        hmap_for_db=new HashMap<>();
+        smap_for_db=new HashMap<>();
+        smsgsndrs=new ArrayList<>();
+        hmsgsndrs=new ArrayList<>();
+        sfmsgs=new ArrayList<>();
+        hfmsgs=new ArrayList<>();
         ActiveAndroid.beginTransaction();
         try{
 
@@ -158,23 +151,38 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                String tp=msgSqldb.type;
                String mm=msgSqldb.message;
                Long tmstmp=msgSqldb.timestamp;
+               String sp=msgSqldb.spam;
 
                String msg_sender=add;
-
-               if(msgsndrs.contains(msg_sender)){
-                   map_for_db.get(msg_sender).add(new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp)));
+               if(sp.equals("spam")){
+                   if(smsgsndrs.contains(msg_sender)){
+                       smap_for_db.get(msg_sender).add(new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp),sp));
+                   }
+                   else{
+                       smsgsndrs.add(msg_sender);
+                       ArrayList<Message> temp=new ArrayList<>();
+                       temp.add(new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp),sp));
+                       smap_for_db.put(msg_sender,temp);
+                       sfmsgs.add(mm);
+                   }
                }
                else{
-                   msgsndrs.add(msg_sender);
-                   ArrayList<Message> temp=new ArrayList<>();
-                   temp.add(new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp)));
-                   map_for_db.put(msg_sender,temp);
-                   fmsgs.add(mm);
+                   if(hmsgsndrs.contains(msg_sender)){
+                       hmap_for_db.get(msg_sender).add(new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp),sp));
+                   }
+                   else{
+                       hmsgsndrs.add(msg_sender);
+                       ArrayList<Message> temp=new ArrayList<>();
+                       temp.add(new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp),sp));
+                       hmap_for_db.put(msg_sender,temp);
+                       hfmsgs.add(mm);
+                   }
                }
            }
+           if(hmap_for_db.size()!=0 || smap_for_db.size()!=0)
+           alertDialog.dismiss();
             lv.setAdapter(new CustomAdapter(this));
             ActiveAndroid.setTransactionSuccessful();
-
         }
         finally {
             ActiveAndroid.endTransaction();
@@ -182,19 +190,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
-    public  void updateInbox(Message message){
+    public  void updateInbox(Message message) {
 
-        if(msgsndrs.contains(message.sender_address)){
-            map_for_db.get(message.sender_address).add(message);
+        if (message.spam.equals("spam")) {
+            if (smsgsndrs.contains(message.sender_address)) {
+                smap_for_db.get(message.sender_address).add(message);
+            } else {
+                smsgsndrs.add(message.sender_address);
+                ArrayList<Message> temp = new ArrayList<>();
+                temp.add(message);
+                smap_for_db.put(message.sender_address, temp);
+                sfmsgs.add(message.message);
+            }
+        } else {
+            if (hmsgsndrs.contains(message.sender_address)) {
+                hmap_for_db.get(message.sender_address).add(message);
+            } else {
+                hmsgsndrs.add(message.sender_address);
+                ArrayList<Message> temp = new ArrayList<>();
+                temp.add(message);
+                hmap_for_db.put(message.sender_address, temp);
+                hfmsgs.add(message.message);
+            }
+            lv.setAdapter(new CustomAdapter(this));
+
         }
-        else{
-            msgsndrs.add(message.sender_address);
-            ArrayList<Message> temp=new ArrayList<>();
-            temp.add(message);
-            map_for_db.put(message.sender_address,temp);
-            fmsgs.add(message.message);
-        }
-        lv.setAdapter(new CustomAdapter(this));
     }
 
 
@@ -206,7 +226,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .where("timestamp = ?",mg.timestamp)
                 .where("message = ?",mg.message)
                 .execute()).size() == 0) {
-            msg_sqldb msg_db = new msg_sqldb(mg.id,mg.sender_address,mg.date,mg.time,mg.type,mg.message,mg.timestamp);
+            msg_sqldb msg_db = new msg_sqldb(mg.id,mg.sender_address,mg.date,mg.time,mg.type,mg.message,mg.timestamp,mg.spam);
             msg_db.save();
             Log.i("NEW ","msg received");
             updateInbox(mg);
@@ -216,23 +236,36 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void addtodb(Message mg){
         shownotification(mg);
-        msg_sqldb msgSqldb=new msg_sqldb(mg.id,mg.sender_address,mg.date,mg.time,mg.type,mg.message,mg.timestamp);
+        msg_sqldb msgSqldb=new msg_sqldb(mg.id,mg.sender_address,mg.date,mg.time,mg.type,mg.message,mg.timestamp,mg.spam);
         msgSqldb.save();
     }
 
     public void addsendsmstodb(Message mg){
-        msg_sqldb msgSqldb=new msg_sqldb(mg.id,mg.sender_address,mg.date,mg.time,mg.type,mg.message,mg.timestamp);
+        msg_sqldb msgSqldb=new msg_sqldb(mg.id,mg.sender_address,mg.date,mg.time,mg.type,mg.message,mg.timestamp,mg.spam);
         msgSqldb.save();
+    }
+
+    public void gotnewmessage(String id,String sender,String date,String msg,String timestamp){
+        //sendJson(msg,id,date,sender,timestamp);
+
+
+
+        sendJson json=new sendJson();
+        json.execute(msg,id,date,sender,timestamp);
     }
 
 
     public void shownotification(Message message) {
         //PendingIntent pi = PendingIntent.getActivity(getApplicationContext(), 0, new Intent(getApplicationContext(), MainActivity.class), 0);
        // Resources r = getResources();
+        String snd=message.sender_address;
+        if(contacts_for_db.containsKey(message.sender_address))
+            snd=contacts_for_db.get(message.sender_address);
+
         Notification notification = new NotificationCompat.Builder(this)
                 .setTicker("New Message")
                .setSmallIcon(android.R.drawable.stat_notify_sync)
-                .setContentTitle(message.sender_address)
+                .setContentTitle(snd)
                 .setContentText(message.message)
                 //.setContentIntent(pi)
                 .setAutoCancel(true)
@@ -453,7 +486,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
                 msgids_for_asynctask.add(id);
-                Message message=new Message(id,sndrnmbr,dateFromSms,type,msg,date);
+                Message message=new Message(id,sndrnmbr,dateFromSms,type,msg,date,"ham");
 
 
                 if(map_for_asyntask.get(sndrnmbr)!=null)
@@ -494,7 +527,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 .where("timestamp = ?",mg.timestamp)
                                 .where("message = ?",mg.message)
                                 .execute()).size() == 0) {
-                            msg_sqldb msg_db = new msg_sqldb(tmp_id,mg.sender_address,mg.date,mg.time,mg.type,mg.message,mg.timestamp);
+                            msg_sqldb msg_db = new msg_sqldb(tmp_id,mg.sender_address,mg.date,mg.time,mg.type,mg.message,mg.timestamp,mg.spam);
                             msg_db.save();
                         }
                     }
@@ -554,7 +587,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         private LayoutInflater inflater=null;
         public CustomAdapter(MainActivity mainActivity) {
             // TODO Auto-generated constructor stub
-            result=msgsndrs;
+            result=hmsgsndrs;
             context=mainActivity;
 
 
@@ -595,7 +628,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             holder.fmsg=(TextView) rowView.findViewById(R.id.fmsgs);
             holder.img=(ImageView) rowView.findViewById(R.id.imageview);
            holder.tv.setText(result.get(position));
-           holder.fmsg.setText(fmsgs.get(position));
+           holder.fmsg.setText(hfmsgs.get(position));
            String ph_no=result.get(position);
            if(contacts_for_db.containsKey(ph_no))
                holder.tv.setText(contacts_for_db.get(ph_no));
@@ -605,10 +638,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             rowView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                  String p=msgsndrs.get(position);
+                  String p=hmsgsndrs.get(position);
                     Intent in = new Intent(getBaseContext(), single_user_msg.class);
                    Bundle args = new Bundle();
-                   args.putSerializable("ARRAYLIST",(Serializable)map_for_db.get(p));
+                   args.putSerializable("ARRAYLIST",(Serializable)hmap_for_db.get(p));
                    in.putExtra("BUNDLE",args);
 
 
@@ -630,62 +663,76 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         inst = this;
     }
 
-    protected void sendJson(final String msg) {
-        Thread t = new Thread() {
-
-            public void run() {
-                Looper.prepare();
-                HttpClient httpclient;
-                HttpGet request;
-                HttpResponse response = null;
-                String result = "";
-                try{
-                    httpclient = new DefaultHttpClient();
-                    //request = new HttpGet("http://10.0.2.2/init.php");
-                    HttpPost post = new HttpPost("https://spamshield.herokuapp.com/predict");
-                    //NameValuePair nameValuePair=new BasicNameValuePair("message",msg);
-                    JSONObject json = new JSONObject();
-                    json.put("messagejson", msg);
-                    StringEntity se;
-                    se = new StringEntity(json.toString());
-                    post.setEntity(se);
-                    //HttpPost httppost = new HttpPost("http://10.0.0.3/xampp/information.php?info="+nameValuePair);
-                    //String data= URLEncoder.encode("message","UTF-8")+"="+URLEncoder.encode(msg,"UTF-8");
-
-                   //post.setHeader("Accept", "application/json");
-                    post.setHeader("Content-type", "application/json");
-                    //post.setHeader("Accept-Encoding", "gzip");
 
 
 
-                    //post.setEntity(new StringEntity(data));
+    public class sendJson extends  AsyncTask<String ,Void,Void>{
+        String msg,id,sender,date,timestamp,result;
 
-                    response = httpclient.execute(post);
-                    Log.i("msgr","result");
+        @Override
+        protected Void doInBackground(String... strings) {
+             msg=strings[0];
+             id=strings[1];
+             sender=strings[3];
+             date=strings[2];
+             timestamp=strings[4];
 
-                   //response = httpclient.execute(request);
-                } catch (Exception e){
-                    result = "error1";
-                }
+            HttpClient httpclient;
+            HttpResponse response = null;
+             result = "";
+            try{
+                httpclient = new DefaultHttpClient();
 
-                try{
-                    BufferedReader rd = new BufferedReader(new InputStreamReader(
-                            response.getEntity().getContent()));
-                    String line="";
-                    while((line = rd.readLine()) != null){
-                        result = result + line;
-                    }
-                    Log.i("msgr",result);
-                } catch(Exception e){
-                    result = "error2";
-                }
+                HttpPost post = new HttpPost("https://spamshield.herokuapp.com/predict");
 
-                Log.i("msgr",result);
-                Looper.loop(); //Loop in the message queue
+                JSONObject json = new JSONObject();
+                json.put("messagejson", msg);
+                StringEntity se;
+                se = new StringEntity(json.toString());
+                post.setEntity(se);
+
+                post.setHeader("Content-type", "application/json");
+                response = httpclient.execute(post);
+                Log.i("msgr","result");
+
+            } catch (Exception e){
+                result = "error1";
             }
-        };
 
-        t.start();
+            try{
+                BufferedReader rd = new BufferedReader(new InputStreamReader(
+                        response.getEntity().getContent()));
+                String line="";
+                while((line = rd.readLine()) != null){
+                    result = result + line;
+                }
+                Log.i("msgr",result);
+            } catch(Exception e){
+                result = "error2";
+            }
+
+            Log.i("msgr",result);
+            return null;
+
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            Log.i("Completeted","Chk ");
+            readcontactsfromdatabase();
+
+            String ans;
+            if(result.contains("spam")){
+                ans="spam";
+            }
+            else
+                ans="ham";
+            Log.i("Result", String.valueOf(date.length()));
+            Message mesg=new Message(id,sender,date,"1",msg,timestamp,ans);
+            addnewmsgtodb(mesg);
+
+        }
+
 
     }
 
@@ -693,7 +740,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onResume() {
         super.onResume();
 
-        readcontactsfromdatabase();
+
         readfromdatabase();
         }
 

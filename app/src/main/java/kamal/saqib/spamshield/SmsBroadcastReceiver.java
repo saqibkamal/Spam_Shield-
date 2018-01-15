@@ -28,6 +28,9 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
         Bundle intentExtras = intent.getExtras();
 
         SimpleDateFormat simpleDateFormat=new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
+        String smsBody="",address="",dateFromSms="",id="";
+        Long date=0L;
+        int x=0;
 
         if (intentExtras != null) {
             Object[] sms = (Object[]) intentExtras.get(SMS_BUNDLE);
@@ -37,29 +40,23 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
                 String format = intentExtras.getString("format");
                 SmsMessage smsMessage = SmsMessage.createFromPdu((byte[]) sms[i], format);
 
-                String smsBody = smsMessage.getMessageBody().toString()+"\n";
-                String address = smsMessage.getOriginatingAddress();
-                Long date = smsMessage.getTimestampMillis();
-                String dateFromSms = simpleDateFormat.format(new Date(date));
-                String id=smsMessage.getDisplayMessageBody();
+                smsBody = smsMessage.getMessageBody().toString()+"\n";
+                address = smsMessage.getOriginatingAddress();
+                date = smsMessage.getTimestampMillis();
+                dateFromSms = simpleDateFormat.format(new Date(date));
+                id=smsMessage.getDisplayMessageBody();
 
                 Log.i("msg_detail",smsBody+" "+address+" "+date.toString());
 
 
                 Random random =new Random();
-                int x=random.nextInt()+100000000;
+                x=random.nextInt()+100000000;
                 Log.i("x",String.valueOf(x));
-               message=new Message(String.valueOf(x),address,dateFromSms,"1",smsBody,date.toString());
+              // message=new Message(String.valueOf(x),address,dateFromSms,"1",smsBody,date.toString(),"ham");
 
             }
             MainActivity inst = MainActivity.instance();
-            //MainActivity inst=new MainActivity();
-            if(inst!=null)
-            inst.addnewmsgtodb(message);
-            else{
-                MainActivity mainActivity=new MainActivity();
-                mainActivity.addtodb(message);
-            }
+            inst.gotnewmessage(String.valueOf(x),address,dateFromSms,smsBody,date.toString());
 
 
         }
