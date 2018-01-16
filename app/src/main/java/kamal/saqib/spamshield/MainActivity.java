@@ -1,6 +1,7 @@
 package kamal.saqib.spamshield;
 
 import android.Manifest;
+import android.animation.Animator;
 import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -9,29 +10,44 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewAnimationUtils;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.activeandroid.ActiveAndroid;
 import com.activeandroid.query.Select;
 import com.activeandroid.query.Update;
+import com.baoyz.swipemenulistview.SwipeMenu;
+import com.baoyz.swipemenulistview.SwipeMenuCreator;
+import com.baoyz.swipemenulistview.SwipeMenuItem;
+import com.baoyz.swipemenulistview.SwipeMenuListView;
+import com.ebanx.swipebtn.OnStateChangeListener;
+import com.ebanx.swipebtn.SwipeButton;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -50,12 +66,21 @@ import java.util.HashMap;
 import java.util.List;
 import dmax.dialog.SpotsDialog;
 
+
+import static kamal.saqib.spamshield.R.id.txt_msg1;
+import static kamal.saqib.spamshield.R.id.txt_spam_count;
+
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
     private static final int READ_SMS_PERMISSIONS_REQUEST = 1;
     private static final int SEND_SMS_PERMISSIONS_REQUEST = 2;
     private static final int READ_CONTACTS_PERMISSIONS_REQUEST = 3;
+    private FloatingActionButton fab;
+    private RelativeLayout layoutMain;
+    private RelativeLayout layoutContent;
+    private  boolean isOpen=false;
+
     Button send,read;
-    ListView lv;
+    SwipeMenuListView lv;
 
     AlertDialog alertDialog;
 
@@ -70,22 +95,39 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.screen_first);
+
+
+         layoutMain=findViewById(R.id.layoutMain);
+        layoutContent=findViewById(R.id.layoutContent);
+        fab=findViewById(R.id.big_button);
+
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                viewMenu();
+            }
+        });
+
+
+        TextView t1 =findViewById(txt_spam_count);
+        //getSupportActionBar().show();
+        Typeface myFont1 = Typeface.createFromAsset(getAssets(),"Fonts/Nexa_Bold.otf");
+        t1.setTypeface(myFont1);
+
+        TextView t2 =findViewById(txt_msg1);
+        Typeface myFont2 = Typeface.createFromAsset(getAssets(),"Fonts/Nexa_Bold.otf");
+        t2.setTypeface(myFont2);
+
+
+        lv = (SwipeMenuListView) findViewById(R.id.lv_msg);
 
 
         alertDialog = new SpotsDialog(this);
         alertDialog.show();
 
+            showActionBar();
 
-
-            send = (Button) findViewById(R.id.send);
-            read = (Button) findViewById(R.id.read);
-
-
-            send.setOnClickListener(this);
-            read.setOnClickListener(this);
-
-            lv = (ListView) findViewById(R.id.listview);
 
             //sendJson("hello");
 
@@ -102,6 +144,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             readfromdatabase();
 
 
+
+        SwipeButton enableButton = (SwipeButton) findViewById(R.id.swipe_btn);
+        enableButton.setOnStateChangeListener(new OnStateChangeListener() {
+            @Override
+            public void onStateChange(boolean active) {
+                Toast.makeText(MainActivity.this,"Spam shield is off!", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+
+    }
+
+    private void showActionBar(){
+        LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View v = inflater.inflate(R.layout.screen1,null);
+        final ActionBar bar = getSupportActionBar();
+        //bar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
+        bar.setDisplayHomeAsUpEnabled(false);
+        bar.setDisplayShowHomeEnabled(false);
+        bar.setDisplayShowCustomEnabled(true);
+        bar.setDisplayShowTitleEnabled(false);
+        bar.setCustomView(v);
     }
 
     public void readcontactsfromdatabase(){
@@ -122,6 +186,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
     }
+
+
 
 
     public void readfromdatabase(){
@@ -304,7 +370,57 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    public void viewMenu(){
+        if(!isOpen){
+            int x=layoutContent.getRight();
+            int y=layoutContent.getBottom();
 
+            int startRadius=0;
+            int endRadius=(int) Math.hypot(layoutMain.getWidth(),layoutMain.getHeight());
+            //fab.setBackgroundTintList(ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),android.R.color.holo_blue_light,null)));
+            Animation clock = AnimationUtils.loadAnimation(this, R.anim.clock);
+            Animation aclock = AnimationUtils.loadAnimation(this, R.anim.aclock);
+            fab.startAnimation(clock);
+            Animator anim= ViewAnimationUtils.createCircularReveal(layoutMain,x,y,startRadius,endRadius);
+            anim.start();
+            startActivity(new Intent(getApplicationContext(),send_msg.class));
+            fab.startAnimation(aclock);
+        }
+        else{
+            int x=layoutContent.getRight();
+            int y=layoutContent.getBottom();
+
+            int startRadius=Math.max(layoutMain.getWidth(),layoutMain.getHeight());
+            int endRadius=0;
+            //fab.setBackgroundTintList(ColorStateList.valueOf(ResourcesCompat.getColor(getResources(),android.R.color.white,null)));
+            Animation aclock = AnimationUtils.loadAnimation(this, R.anim.aclock);
+            fab.startAnimation(aclock);
+            Animator anim= ViewAnimationUtils.createCircularReveal(layoutContent,x,y,startRadius,endRadius);
+            anim.addListener(new Animator.AnimatorListener() {
+                @Override
+                public void onAnimationStart(Animator animator) {
+
+                }
+
+                @Override
+                public void onAnimationEnd(Animator animator) {
+                    //layoutContent.setVisibility(View.GONE);
+                }
+
+                @Override
+                public void onAnimationCancel(Animator animator) {
+
+                }
+
+                @Override
+                public void onAnimationRepeat(Animator animator) {
+
+                }
+            });
+            anim.start();
+            isOpen=false;
+        }
+    }
 
 
 
@@ -322,12 +438,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View view) {
-        if(view==read){
-            read_msg();
-        }
-        else if(view==send){
-            send_msg();
-        }
+
 
     }
 
@@ -612,6 +723,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         ArrayList<String> result;
         Context context;
         int [] imageId;
+        int flag;
         private LayoutInflater inflater=null;
         public CustomAdapter(MainActivity mainActivity) {
             // TODO Auto-generated constructor stub
@@ -662,20 +774,78 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                holder.tv.setText(contacts_for_db.get(ph_no));
             //holder.img.setImageResource(imageId[position]);
 
+            final SwipeMenuCreator creator;
+            creator = new SwipeMenuCreator() {
+
+                @Override
+                public void create(SwipeMenu menu) {
+                    if(flag==0)
+                        flag=1;
+                    else
+                        flag=0;
+                    // create "open" item
+                    SwipeMenuItem deleteItem = new SwipeMenuItem(
+                            getApplicationContext());
+                    // set item background
+                    deleteItem.setBackground(new ColorDrawable(Color.rgb(148, 143,
+                            143)));
+                    // set item width
+                    deleteItem.setWidth(150);
+
+                    deleteItem.setIcon(R.drawable.ic_bin);
+                    // add to menu
+                    menu.addMenuItem(deleteItem);
+
+                    // create "delete" item
+                    SwipeMenuItem blockItem = new SwipeMenuItem(
+                            getApplicationContext());
+                    // set item background
+                    blockItem.setBackground(new ColorDrawable(Color.rgb(252,
+                            93, 93)));
+                    // set item width
+                    blockItem.setWidth(150);
+                    // set a icon
+                    blockItem.setIcon(R.drawable.ic_block);
+                    // add to menu
+                    menu.addMenuItem(blockItem);
+                }
+            };
+
+// set creator
+            lv.setMenuCreator(creator);
+
+            lv.setOnMenuItemClickListener(new SwipeMenuListView.OnMenuItemClickListener() {
+                @Override
+                public boolean onMenuItemClick(int position, SwipeMenu menu, int index) {
+                    switch (index) {
+                        case 0:
+                            Toast.makeText(getApplicationContext(),"Delete",Toast.LENGTH_SHORT).show();
+                            break;
+                        case 1:
+                            Toast.makeText(getApplicationContext(),"Block",Toast.LENGTH_SHORT).show();
+                            break;
+                    }
+                    // false : close the menu; true : not close the menu
+                    return true;
+                }
+            });
 
             rowView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                  String p=hmsgsndrs.get(position);
-                    Intent in = new Intent(getBaseContext(), single_user_msg.class);
-                   Bundle args = new Bundle();
-                   args.putSerializable("ARRAYLIST",(Serializable)hmap_for_db.get(p));
-                   in.putExtra("BUNDLE",args);
+                    if (flag == 0) {
 
-
-                    startActivity(in);
+                        String p = hmsgsndrs.get(position);
+                        Intent in = new Intent(getBaseContext(), single_user_msg.class);
+                        Bundle args = new Bundle();
+                        args.putSerializable("ARRAYLIST", (Serializable) hmap_for_db.get(p));
+                        in.putExtra("BUNDLE", args);
+                        startActivity(in);
+                    }
                 }
             });
+
+
             return rowView;
         }
 
@@ -767,9 +937,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onResume() {
         super.onResume();
-
-
-        readfromdatabase();
+        //readfromdatabase();
         }
 
     @Override

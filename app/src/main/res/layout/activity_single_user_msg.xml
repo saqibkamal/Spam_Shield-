@@ -29,6 +29,6 @@
         android:layout_marginStart="13dp"
         android:layout_toEndOf="@+id/msg_box"
         android:layout_toRightOf="@+id/msg_box"
-        android:src="@drawable/send_icon"
+
         android:id="@+id/send"/>
 </RelativeLayout>
