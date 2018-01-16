@@ -31,6 +31,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import com.activeandroid.ActiveAndroid;
 import com.activeandroid.query.Select;
+import com.activeandroid.query.Update;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
@@ -134,7 +136,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             List<msg_sqldb> msg_from_db = new Select("*")
                     .from(msg_sqldb.class)
-                    .orderBy("timestamp DESC").execute();
+                    .orderBy("timestamp DESC ")
+                    .execute();
 
            for( msg_sqldb msgSqldb:msg_from_db){
                String id=msgSqldb.msg_id;
@@ -210,9 +213,39 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    public void addtocountdb(Message message){
+        String date=message.date;
+        if((new Select().from(msg_countdb.class).where("date = ?",date).execute()).size()==0){
+            msg_countdb msgCountdb =new msg_countdb(date,1,message.spam.equals("spam")?1:0);
+            Log.i("Update on old","Successful");
+        }
+        else{
+            msg_countdb msgCountdb= (msg_countdb) new Select().from(msg_countdb.class).where("date = ?",date).execute();
+        int x=0;
+            int tot=msgCountdb.totalmsg;
+            int spa=msgCountdb.spammsg;
+            if(message.spam.equals("spam")) {
+                spa++;
+            }
+
+            new Update(msg_countdb.class)
+                    .set("tototalmsg = ?", tot+1)
+                    .where("date = ?", date)
+                    .execute();
+
+            new Update(msg_countdb.class)
+                    .set("spammsg = ?",spa)
+                    .where("date = ?", date)
+                    .execute();
+
+            Log.i("Update","Successful");
+        }
+    }
+
 
     public void addnewmsgtodb(Message mg){
         shownotification(mg);
+        addtocountdb(mg);
         if ((new Select()
                 .from(msg_sqldb.class)
                 .where("address = ?", mg.sender_address)
@@ -714,7 +747,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         @Override
         protected void onPostExecute(Void aVoid) {
             Log.i("Completeted","Chk ");
-            readcontactsfromdatabase();
+
 
             String ans;
             if(result.contains("spam")){

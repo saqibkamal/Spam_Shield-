@@ -9,12 +9,18 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.telephony.SmsManager;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import com.ahmadrosid.lib.MessageView;
 
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
@@ -28,6 +34,7 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
     ArrayAdapter arrayAdapter;
     EditText msg_box;
     ImageView sendButton;
+    ArrayList<Message> msgs;
     String phoneNo;
     SimpleDateFormat simpleDateFormat;
 
@@ -39,20 +46,23 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
         Intent in=getIntent();
 
         messages = (ListView) findViewById(R.id.list);
+
         msg_box=(EditText) findViewById(R.id.msg_box);
         sendButton=(ImageView) findViewById(R.id.send);
         simpleDateFormat=new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
-        arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, smsMessagesList);
-        messages.setAdapter(arrayAdapter);
+       // arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, smsMessagesList);
+      //  messages.setAdapter(arrayAdapter);
 
         Intent intent = getIntent();
         Bundle args = intent.getBundleExtra("BUNDLE");
-        ArrayList<Message> msgs = (ArrayList<Message>) args.getSerializable("ARRAYLIST");
+       msgs = (ArrayList<Message>) args.getSerializable("ARRAYLIST");
         for(int i=0;i<msgs.size();i++) {
-            arrayAdapter.add(msgs.get(i).message+msgs.get(i).spam+msgs.get(i).type);
+//            arrayAdapter.add(msgs.get(i).message+msgs.get(i).spam+msgs.get(i).type);
             phoneNo = msgs.get(i).sender_address;
         }
         sendButton.setOnClickListener(this);
+        messages.setAdapter(new single_user_msg.CustomAdapter(this));
+
     }
 
     @Override
@@ -64,82 +74,147 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
         }
     }
 
-        private void sendSMS(final String message) {
-            String SENT = "SMS_SENT";
-            String DELIVERED = "SMS_DELIVERED";
+    private void sendSMS(final String message) {
+        String SENT = "SMS_SENT";
+        String DELIVERED = "SMS_DELIVERED";
 
-            final PendingIntent sentPI = PendingIntent.getBroadcast(this, 0,
-                    new Intent(SENT), 0);
+        final PendingIntent sentPI = PendingIntent.getBroadcast(this, 0,
+                new Intent(SENT), 0);
 
-            final PendingIntent deliveredPI = PendingIntent.getBroadcast(this, 0,
-                    new Intent(DELIVERED), 0);
-
-
-
-            //---when the SMS has been sent---
-            registerReceiver(new BroadcastReceiver(){
-                @Override
-                public void onReceive(Context arg0, Intent arg1) {
-                    switch (getResultCode())
-                    {
-                        case RESULT_OK:
-                            Toast.makeText(getBaseContext(), "SMS sent",
-                                    Toast.LENGTH_SHORT).show();
-
-                            arrayAdapter.insert(message,0);
-                            msg_box.setText("");
+        final PendingIntent deliveredPI = PendingIntent.getBroadcast(this, 0,
+                new Intent(DELIVERED), 0);
 
 
-                            Long tsLong = System.currentTimeMillis();
-                            String ts = tsLong.toString();
-                            String dateFromSms = simpleDateFormat.format(new Date(tsLong));
-                            Random random =new Random();
-                            int x=random.nextInt()+100000000;
-                            Log.i("xyz",String.valueOf(x));
-                            Message mess=new Message(String.valueOf(x),phoneNo,dateFromSms,"2",message,ts,"ham");
-                            MainActivity inst = MainActivity.instance();
-                            inst.addsendsmstodb(mess);
 
-                            Toast.makeText(getApplicationContext(), "SMS lundo!",
-                                    Toast.LENGTH_LONG).show();
+        //---when the SMS has been sent---
+        registerReceiver(new BroadcastReceiver(){
+            @Override
+            public void onReceive(Context arg0, Intent arg1) {
+                switch (getResultCode())
+                {
+                    case RESULT_OK:
 
 
-                            break;
-                        case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
-                            Toast.makeText(getBaseContext(), "Generic failure",
-                                    Toast.LENGTH_SHORT).show();
-                            break;
-                        case SmsManager.RESULT_ERROR_NO_SERVICE:
-                            Toast.makeText(getBaseContext(), "No service",
-                                    Toast.LENGTH_SHORT).show();
-                            break;
-                        case SmsManager.RESULT_ERROR_NULL_PDU:
-                            Toast.makeText(getBaseContext(), "Null PDU",
-                                    Toast.LENGTH_SHORT).show();
-                            break;
-                        case SmsManager.RESULT_ERROR_RADIO_OFF:
-                            Toast.makeText(getBaseContext(), "Radio off",
-                                    Toast.LENGTH_SHORT).show();
-                            break;
-                    }
+                        //arrayAdapter.insert(message,0);
+
+                        msg_box.setText("");
+
+
+                        Long tsLong = System.currentTimeMillis();
+                        String ts = tsLong.toString();
+                        String dateFromSms = simpleDateFormat.format(new Date(tsLong));
+                        Random random =new Random();
+                        int x=random.nextInt()+100000000;
+                        Log.i("xyz",String.valueOf(x));
+                        Message mess=new Message(String.valueOf(x),phoneNo,dateFromSms,"2",message,ts,"ham");
+                        msgs.add(0,mess);
+                        MainActivity inst = MainActivity.instance();
+                        inst.addsendsmstodb(mess);
+
+                        Toast.makeText(getApplicationContext(), "SMS Sent!",
+                                Toast.LENGTH_LONG).show();
+
+
+                        break;
+                    case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
+                        Toast.makeText(getBaseContext(), "Generic failure",
+                                Toast.LENGTH_SHORT).show();
+                        break;
+                    case SmsManager.RESULT_ERROR_NO_SERVICE:
+                        Toast.makeText(getBaseContext(), "No service",
+                                Toast.LENGTH_SHORT).show();
+                        break;
+                    case SmsManager.RESULT_ERROR_NULL_PDU:
+                        Toast.makeText(getBaseContext(), "Null PDU",
+                                Toast.LENGTH_SHORT).show();
+                        break;
+                    case SmsManager.RESULT_ERROR_RADIO_OFF:
+                        Toast.makeText(getBaseContext(), "Radio off",
+                                Toast.LENGTH_SHORT).show();
+                        break;
                 }
-            }, new IntentFilter(SENT));
-
-
-            try {
-                SmsManager smsManager = SmsManager.getDefault();
-                smsManager.sendTextMessage(phoneNo, null, message, sentPI, deliveredPI);
-
-
-            } catch (Exception e) {
-                Toast.makeText(getApplicationContext(),
-                        "SMS faileed, please try again later!",
-                        Toast.LENGTH_LONG).show();
-                e.printStackTrace();
-                e.getCause();
-
             }
+        }, new IntentFilter(SENT));
 
+
+        try {
+            SmsManager smsManager = SmsManager.getDefault();
+            smsManager.sendTextMessage(phoneNo, null, message, sentPI, deliveredPI);
+
+
+        } catch (Exception e) {
+            Toast.makeText(getApplicationContext(),
+                    "SMS faileed, please try again later!",
+                    Toast.LENGTH_LONG).show();
+            e.printStackTrace();
+            e.getCause();
 
         }
+
+
+    }
+
+    public class CustomAdapter extends BaseAdapter {
+        ArrayList<String> result;
+        Context context;
+        int [] imageId;
+        private LayoutInflater inflater=null;
+        public CustomAdapter(single_user_msg mainActivity) {
+            // TODO Auto-generated constructor stub
+
+            context=mainActivity;
+
+
+            inflater = ( LayoutInflater )context.
+                    getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        }
+        @Override
+        public int getCount() {
+            // TODO Auto-generated method stub
+            return msgs.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            // TODO Auto-generated method stub
+            return position;
+        }
+
+        @Override
+        public long getItemId(int position) {
+            // TODO Auto-generated method stub
+            return position;
+        }
+
+        public class Holder
+        {
+            MessageView tv;
+
+        }
+        @Override
+        public View getView(final int position, View convertView, ViewGroup parent) {
+            // TODO Auto-generated method stub
+            kamal.saqib.spamshield.single_user_msg.CustomAdapter.Holder holder= new kamal.saqib.spamshield.single_user_msg.CustomAdapter.Holder();
+            View rowView;
+            rowView = inflater.inflate(R.layout.single_msg_lsview, null);
+            holder.tv=(MessageView)rowView.findViewById(R.id.message_view);
+
+            if(msgs.get(position).type.equals("1")){
+                holder.tv.setLeft();
+                holder.tv.setTitleMessages(msgs.get(position).date);
+                holder.tv.setDecsMessages(msgs.get(position).message);
+            }
+            else{
+                holder.tv.setRight();
+                holder.tv.setTitleMessages(msgs.get(position).date);
+                holder.tv.setDecsMessages(msgs.get(position).message);
+            }
+            //holder.img.setImageResource(imageId[position]);
+
+
+
+            return rowView;
+        }
+
+    }
 }
