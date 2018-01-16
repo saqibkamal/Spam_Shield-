@@ -52,14 +52,11 @@
             android:value="MyDatabase.db" />
         <meta-data
             android:name="AA_DB_VERSION"
-            android:value="2" />
+            android:value="3" />
 
         <meta-data
             android:name="AA_MODELS"
-            android:value="kamal.saqib.spamshield.msg_sqldb,kamal.saqib.spamshield.cntcts_sqldb"
-            />
-
-
+            android:value="kamal.saqib.spamshield.msg_sqldb,kamal.saqib.spamshield.cntcts_sqldb,kamal.saqib.spamshield.msg_countdb" />
 
         <service
             android:name=".MyService"
