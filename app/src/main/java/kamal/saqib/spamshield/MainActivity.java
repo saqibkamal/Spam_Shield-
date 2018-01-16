@@ -52,6 +52,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final int READ_SMS_PERMISSIONS_REQUEST = 1;
     private static final int SEND_SMS_PERMISSIONS_REQUEST = 2;
     private static final int READ_CONTACTS_PERMISSIONS_REQUEST = 3;
+    private static final int BROADCAST_SMS_PERMISSIONS_REQUEST = 4;
+    private static final int BROADCAST_WAP_PUSH_PERMISSIONS_REQUEST = 5;
+    private static final int SEND_RESPOND_VIA_MESSAGE_PERMISSIONS_REQUEST = 6;
+
+
+
     Button send,read;
     ListView lv;
 
@@ -69,6 +75,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        getAllPermission();
 
 
         alertDialog = new SpotsDialog(this);
@@ -76,8 +83,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
 
-            send = (Button) findViewById(R.id.send);
-            read = (Button) findViewById(R.id.read);
+        send = (Button) findViewById(R.id.send);
+        read = (Button) findViewById(R.id.read);
 
 
             send.setOnClickListener(this);
@@ -98,6 +105,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             readcontactsfromdatabase();
             readfromdatabase();
+
+
 
 
     }
@@ -321,6 +330,45 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
+    public void getPermissionToBroadcastSMS() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.BROADCAST_SMS)
+                != PackageManager.PERMISSION_GRANTED) {
+            if (shouldShowRequestPermissionRationale(
+                    Manifest.permission.BROADCAST_SMS)) {
+                Toast.makeText(this, "Please allow permission!", Toast.LENGTH_SHORT).show();
+            }
+            requestPermissions(new String[]{Manifest.permission.BROADCAST_SMS},
+                    BROADCAST_SMS_PERMISSIONS_REQUEST);
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public void getPermissionToBroadcastWapPush() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.BROADCAST_WAP_PUSH)
+                != PackageManager.PERMISSION_GRANTED) {
+            if (shouldShowRequestPermissionRationale(
+                    Manifest.permission.BROADCAST_WAP_PUSH)) {
+                Toast.makeText(this, "Please allow permission!", Toast.LENGTH_SHORT).show();
+            }
+            requestPermissions(new String[]{Manifest.permission.BROADCAST_WAP_PUSH},
+                    BROADCAST_WAP_PUSH_PERMISSIONS_REQUEST);
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public void getPermissionToSendRespondViaMessage() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_RESPOND_VIA_MESSAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            if (shouldShowRequestPermissionRationale(
+                    Manifest.permission.SEND_RESPOND_VIA_MESSAGE)) {
+                Toast.makeText(this, "Please allow permission!", Toast.LENGTH_SHORT).show();
+            }
+            requestPermissions(new String[]{Manifest.permission.SEND_RESPOND_VIA_MESSAGE},
+                    SEND_RESPOND_VIA_MESSAGE_PERMISSIONS_REQUEST);
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
     public void getPermissionToSendSMS(){
         if(ContextCompat.checkSelfPermission(this,Manifest.permission.SEND_SMS)
                 !=PackageManager.PERMISSION_GRANTED){
@@ -356,47 +404,92 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                            @NonNull String permissions[],
                                            @NonNull int[] grantResults) {
         // Make sure it's our original READ_CONTACTS request
-        if (requestCode == READ_SMS_PERMISSIONS_REQUEST) {
-            if (grantResults.length == 1 &&
-                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "Read SMS permission granted", Toast.LENGTH_SHORT).show();
-               // getPermissionToSendSMS();
+
+        switch (requestCode) {
+            case READ_SMS_PERMISSIONS_REQUEST: {
+                if (grantResults.length == 1 &&
+                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this, "Read SMS permission granted", Toast.LENGTH_SHORT).show();
+                    // getPermissionToSendSMS();
 
 
-            } else {
-                Toast.makeText(this, "Read SMS permission denied", Toast.LENGTH_SHORT).show();
-                finish();
+                } else {
+                    Toast.makeText(this, "Read SMS permission denied", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
             }
+            break;
 
-        }
-        else if (requestCode == SEND_SMS_PERMISSIONS_REQUEST) {
-            if (grantResults.length == 1 &&
-                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "Send SMS permission granted", Toast.LENGTH_SHORT).show();
-                //getPermissionToReadContacts();
+            case BROADCAST_SMS_PERMISSIONS_REQUEST: {
+                if (grantResults.length == 1 &&
+                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this, "Broadcast SMS permission granted", Toast.LENGTH_SHORT).show();
+                    // getPermissionToSendSMS();
 
 
-            } else {
-                Toast.makeText(this, "Send SMS permission denied", Toast.LENGTH_SHORT).show();
-                finish();
+                } else {
+                    Toast.makeText(this, "Broadcast SMS permission denied", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
             }
+            break;
 
-        }
+            case SEND_SMS_PERMISSIONS_REQUEST: {
+                if (grantResults.length == 1 &&
+                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this, "Send SMS permission granted", Toast.LENGTH_SHORT).show();
+                    //getPermissionToReadContacts();
 
-        else if (requestCode == READ_CONTACTS_PERMISSIONS_REQUEST) {
-            if (grantResults.length == 1 &&
-                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "Read Contacts permission granted", Toast.LENGTH_SHORT).show();
 
-
-            } else {
-                Toast.makeText(this, "Read Contacts permission denied", Toast.LENGTH_SHORT).show();
-                finish();
+                } else {
+                    Toast.makeText(this, "Send SMS permission denied", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
             }
+            break;
 
-        }
-        else {
-            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+            case BROADCAST_WAP_PUSH_PERMISSIONS_REQUEST: {
+                if (grantResults.length == 1 &&
+                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this, "Broadcast Wap Push permission granted", Toast.LENGTH_SHORT).show();
+                    //getPermissionToReadContacts();
+
+
+                } else {
+                    Toast.makeText(this, "Brd Wap Psh permission denied", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+            }
+            break;
+
+            case SEND_RESPOND_VIA_MESSAGE_PERMISSIONS_REQUEST: {
+                if (grantResults.length == 1 &&
+                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this, "Respond permission granted", Toast.LENGTH_SHORT).show();
+                    //getPermissionToReadContacts();
+
+
+                } else {
+                    Toast.makeText(this, "Respond permission denied", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+            }
+            break;
+
+            case READ_CONTACTS_PERMISSIONS_REQUEST: {
+                if (grantResults.length == 1 &&
+                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this, "Read Contacts permission granted", Toast.LENGTH_SHORT).show();
+
+
+                } else {
+                    Toast.makeText(this, "Read Contacts permission denied", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+            }
+            break;
+            default:
+                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
 
@@ -745,4 +838,44 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         MainActivity mainActivity=new MainActivity();
 
     }
+
+//    protected void makeDefault(){
+//        {
+//            Log.i("MainAcitvity", "start make default");
+//            // Only do these checks/changes on KitKat+, the "mSetDefaultSmsLayout" has its visibility
+//            // set to "gone" in the xml layout so it won't show at all on earlier Android versions.
+//            final String myPackageName = getPackageName();
+//
+//            if (Utility.hasKitKat())
+//            {
+//                if (Utility.isDefaultSmsApp(this))
+//                {
+//                    // This app is the default, remove the "make this app the default" layout and
+//                    // enable message sending components.
+//                    mSetDefaultSmsLayout.setVisibility(View.GONE);
+//                }
+//                else
+//                {
+//                    Log.i("MainActivity", "Not Default App");
+//                    // Not the default, show the "make this app the default" layout and disable
+//                    // message sending components.
+//                    mSetDefaultSmsLayout.setVisibility(View.VISIBLE);
+//
+//                    Button button = (Button) findViewById(R.id.set_default_sms_button);
+//                    button.setOnClickListener(new OnClickListener()
+//                    {
+//                        @Override
+//                        public void onClick(View view)
+//                        {
+//                            Log.i("MainActivity", "Button Pushed");
+//                            //Utility.setDefaultSmsApp(MainActivity.this);
+//                            Intent intent = new Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT);
+//                            intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME, myPackageName);
+//                            startActivity(intent);
+//                        }
+//                    });
+//                }
+//            }
+//        }
+//    }
 }
