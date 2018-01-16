@@ -8,7 +8,11 @@
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.RECEIVE_MMS" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <permission android:name="android.permission.BROADCAST_SMS"
+        android:protectionLevel="signature" />
     <uses-permission android:name="android.provider.Telephony.SMS_RECEIVED" />
+    <permission android:name="android.permission.BROADCAST_WAP_PUSH"
+        android:protectionLevel="signature" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
@@ -31,12 +35,22 @@
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity android:name=".send_msg" />
-        <activity android:name=".single_user_msg" />
+        <activity android:name=".single_user_msg" >
+        <intent-filter android:priority="999">
+            <action android:name="android.intent.action.SENDTO" />
+            <data android:scheme="sms" />
+            <data android:scheme="smsto" />
+            <data android:scheme="mms" />
+            <data android:scheme="mmsto" />
+
+        </intent-filter>
+        </activity>
 
         <receiver
             android:name=".SmsBroadcastReceiver"
@@ -44,6 +58,9 @@
             android:exported="true">
             <intent-filter android:priority="999">
                 <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+                <action android:name="android.provider.Telephony.SMS_DELIVER"/>
+                <action android:name="android.provider.Telephony.WAP_PUSH_DELIVER" />
+
             </intent-filter>
         </receiver>
 
@@ -61,7 +78,11 @@
         <service
             android:name=".MyService"
             android:enabled="true"
-            android:exported="true" />
+            android:exported="true" >
+            <intent-filter android:priority="999">
+                <action android:name="android.intent.action.RESPOND_VIA_MESSAGE"/>
+            </intent-filter>
+        </service>
 
 
     </application>

@@ -17,6 +17,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.provider.ContactsContract;
+import android.provider.Telephony;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
@@ -74,14 +75,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final int READ_SMS_PERMISSIONS_REQUEST = 1;
     private static final int SEND_SMS_PERMISSIONS_REQUEST = 2;
     private static final int READ_CONTACTS_PERMISSIONS_REQUEST = 3;
+
     private FloatingActionButton fab;
     private RelativeLayout layoutMain;
     private RelativeLayout layoutContent;
     private  boolean isOpen=false;
 
-    Button send,read;
-    SwipeMenuListView lv;
+    private static final int BROADCAST_SMS_PERMISSIONS_REQUEST = 4;
+    private static final int BROADCAST_WAP_PUSH_PERMISSIONS_REQUEST = 5;
+    private static final int SEND_RESPOND_VIA_MESSAGE_PERMISSIONS_REQUEST = 6;
 
+
+    ListView lv;
     AlertDialog alertDialog;
 
     HashMap<String,ArrayList<Message>> map_for_asyntask,smap_for_db,hmap_for_db;
@@ -97,8 +102,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.screen_first);
 
+        //getAllPermission();
 
-         layoutMain=findViewById(R.id.layoutMain);
+        layoutMain=findViewById(R.id.layoutMain);
         layoutContent=findViewById(R.id.layoutContent);
         fab=findViewById(R.id.big_button);
 
@@ -109,9 +115,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
 
-
         TextView t1 =findViewById(txt_spam_count);
-        //getSupportActionBar().show();
         Typeface myFont1 = Typeface.createFromAsset(getAssets(),"Fonts/Nexa_Bold.otf");
         t1.setTypeface(myFont1);
 
@@ -119,40 +123,43 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Typeface myFont2 = Typeface.createFromAsset(getAssets(),"Fonts/Nexa_Bold.otf");
         t2.setTypeface(myFont2);
 
-
-        lv = (SwipeMenuListView) findViewById(R.id.lv_msg);
+        lv = findViewById(R.id.lv_msg);
 
 
         alertDialog = new SpotsDialog(this);
         alertDialog.show();
+        alertDialog.setTitle("Setting Up...");
 
-            showActionBar();
+        showActionBar();
 
+        hmap_for_db=new HashMap<>();
+        smap_for_db=new HashMap<>();
+        smsgsndrs=new ArrayList<>();
+        hmsgsndrs=new ArrayList<>();
+        sfmsgs=new ArrayList<>();
+        hfmsgs=new ArrayList<>();
 
-            //sendJson("hello");
+        GetContact getContact = new GetContact();
+        getContact.execute();
 
-            GetContact getContact = new GetContact();
-            getContact.execute();
+        GetAllMessages getAllMessages = new GetAllMessages();
+        getAllMessages.execute();
 
-            GetAllMessages getAllMessages = new GetAllMessages();
-            getAllMessages.execute();
+        simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
 
+        readcontactsfromdatabase();
+        readfromdatabase();
 
-            simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
-
-            readcontactsfromdatabase();
-            readfromdatabase();
-
-
-
-        SwipeButton enableButton = (SwipeButton) findViewById(R.id.swipe_btn);
+        SwipeButton enableButton = findViewById(R.id.swipe_btn);
         enableButton.setOnStateChangeListener(new OnStateChangeListener() {
             @Override
             public void onStateChange(boolean active) {
-                Toast.makeText(MainActivity.this,"Spam shield is off!", Toast.LENGTH_SHORT).show();
+                if(active==true)
+                    Toast.makeText(MainActivity.this,"Spam shield is off!", Toast.LENGTH_SHORT).show();
+                else
+                    Toast.makeText(MainActivity.this,"Spam shield is on!", Toast.LENGTH_SHORT).show();
             }
         });
-
 
     }
 
@@ -160,12 +167,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View v = inflater.inflate(R.layout.screen1,null);
         final ActionBar bar = getSupportActionBar();
-        //bar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
         bar.setDisplayHomeAsUpEnabled(false);
         bar.setDisplayShowHomeEnabled(false);
         bar.setDisplayShowCustomEnabled(true);
         bar.setDisplayShowTitleEnabled(false);
         bar.setCustomView(v);
+
     }
 
     public void readcontactsfromdatabase(){
@@ -188,68 +195,62 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
-
-
     public void readfromdatabase(){
-        hmap_for_db=new HashMap<>();
-        smap_for_db=new HashMap<>();
-        smsgsndrs=new ArrayList<>();
-        hmsgsndrs=new ArrayList<>();
-        sfmsgs=new ArrayList<>();
-        hfmsgs=new ArrayList<>();
+
         ActiveAndroid.beginTransaction();
-        try{
+        try {
 
-            List<msg_sqldb> msg_from_db = new Select("*")
-                    .from(msg_sqldb.class)
-                    .orderBy("timestamp DESC ")
-                    .execute();
+            List<msg_sqldb> msg_from_db = new Select("*").from(msg_sqldb.class)
+                    .orderBy("timestamp DESC ").execute();
 
-           for( msg_sqldb msgSqldb:msg_from_db){
-               String id=msgSqldb.msg_id;
-               String add=msgSqldb.address;
-               String dt=msgSqldb.date;
-               String tm=msgSqldb.time;
-               String tp=msgSqldb.type;
-               String mm=msgSqldb.message;
-               Long tmstmp=msgSqldb.timestamp;
-               String sp=msgSqldb.spam;
+            for (msg_sqldb msgSqldb : msg_from_db){
+                String id=msgSqldb.msg_id;
+            String add=msgSqldb.address;
+            String dt=msgSqldb.date;
+            String tm=msgSqldb.time;
+            String tp=msgSqldb.type;
+            String mm=msgSqldb.message;
+            Long tmstmp=msgSqldb.timestamp;
+            String sp=msgSqldb.spam;
 
-               String msg_sender=add;
-               if(sp.equals("spam")){
-                   if(smsgsndrs.contains(msg_sender)){
-                       smap_for_db.get(msg_sender).add(new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp),sp));
-                   }
-                   else{
-                       smsgsndrs.add(msg_sender);
-                       ArrayList<Message> temp=new ArrayList<>();
-                       temp.add(new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp),sp));
-                       smap_for_db.put(msg_sender,temp);
-                       sfmsgs.add(mm);
-                   }
-               }
-               else{
-                   if(hmsgsndrs.contains(msg_sender)){
-                       hmap_for_db.get(msg_sender).add(new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp),sp));
-                   }
-                   else{
-                       hmsgsndrs.add(msg_sender);
-                       ArrayList<Message> temp=new ArrayList<>();
-                       temp.add(new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp),sp));
-                       hmap_for_db.put(msg_sender,temp);
-                       hfmsgs.add(mm);
-                   }
-               }
-           }
-           if(hmap_for_db.size()!=0 || smap_for_db.size()!=0)
-           alertDialog.dismiss();
-            lv.setAdapter(new CustomAdapter(this));
-            ActiveAndroid.setTransactionSuccessful();
+            String msg_sender=add;
+            if(sp.equals("spam")){
+                Log.i("spam",msgSqldb.message);
+                if(smsgsndrs.contains(msg_sender)){
+                    smap_for_db.get(msg_sender).add(new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp),sp));
+                }
+                else{
+                    smsgsndrs.add(msg_sender);
+                    ArrayList<Message> temp=new ArrayList<>();
+                    temp.add(new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp),sp));
+                    smap_for_db.put(msg_sender,temp);
+                    sfmsgs.add(mm);
+                }
+            }
+            else{
+                if(hmsgsndrs.contains(msg_sender)){
+                    //Log.i("repeated",msg_sender);
+                    hmap_for_db.get(msg_sender).add(new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp),sp));
+                }
+                else{
+                    Log.i("not repeated",msg_sender);
+                    hmsgsndrs.add(msg_sender);
+                    ArrayList<Message> temp=new ArrayList<>();
+                    temp.add(new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp),sp));
+                    hmap_for_db.put(msg_sender,temp);
+                    hfmsgs.add(mm);
+                }
+            }
+        }
+        if (hmap_for_db.size() != 0 || smap_for_db.size() != 0)
+            alertDialog.dismiss();
+        lv.setAdapter(new CustomAdapter(this));
+        ActiveAndroid.setTransactionSuccessful();
+
         }
         finally {
             ActiveAndroid.endTransaction();
         }
-
     }
 
     public  void updateInbox(Message message) {
@@ -274,15 +275,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 hmap_for_db.put(message.sender_address, temp);
                 hfmsgs.add(message.message);
             }
-            lv.setAdapter(new CustomAdapter(this));
-
         }
+        lv.setAdapter(new CustomAdapter(this));
     }
 
     public void addtocountdb(Message message){
         String date=message.date;
         if((new Select().from(msg_countdb.class).where("date = ?",date).execute()).size()==0){
             msg_countdb msgCountdb =new msg_countdb(date,1,message.spam.equals("spam")?1:0);
+            msgCountdb.save();
             Log.i("Update on old","Successful");
         }
         else{
@@ -308,9 +309,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-
     public void addnewmsgtodb(Message mg){
-        shownotification(mg);
+        if(mg.spam.equals("ham"))
+            shownotification(mg);
         addtocountdb(mg);
         if ((new Select()
                 .from(msg_sqldb.class)
@@ -325,27 +326,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-
-    public void addtodb(Message mg){
-        shownotification(mg);
-        msg_sqldb msgSqldb=new msg_sqldb(mg.id,mg.sender_address,mg.date,mg.time,mg.type,mg.message,mg.timestamp,mg.spam);
-        msgSqldb.save();
-    }
-
     public void addsendsmstodb(Message mg){
         msg_sqldb msgSqldb=new msg_sqldb(mg.id,mg.sender_address,mg.date,mg.time,mg.type,mg.message,mg.timestamp,mg.spam);
         msgSqldb.save();
     }
 
     public void gotnewmessage(String id,String sender,String date,String msg,String timestamp){
-        //sendJson(msg,id,date,sender,timestamp);
-
 
 
         sendJson json=new sendJson();
         json.execute(msg,id,date,sender,timestamp);
     }
-
 
     public void shownotification(Message message) {
         //PendingIntent pi = PendingIntent.getActivity(getApplicationContext(), 0, new Intent(getApplicationContext(), MainActivity.class), 0);
@@ -360,7 +351,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     .setSmallIcon(android.R.drawable.stat_notify_sync)
                     .setContentTitle(snd)
                     .setContentText(message.message)
-                    //.setContentIntent(pi)
                     .setAutoCancel(true)
                     .setPriority(Notification.PRIORITY_MAX)
                     .build();
@@ -422,17 +412,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-
-
-
-    public void read_msg(){
-       // shownotification();
-       // Intent i = new Intent(getBaseContext(), read_msg.class);
-        //startActivity(i);
-    }
-    public void send_msg(){
-        Intent i = new Intent(getBaseContext(), send_msg.class);
-        startActivity(i);
+    public void set(){
+        if(alertDialog.isShowing())
+            alertDialog.dismiss();
+        lv.setAdapter(new CustomAdapter(this));
     }
 
 
@@ -461,6 +444,45 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
             requestPermissions(new String[]{Manifest.permission.READ_SMS},
                     READ_SMS_PERMISSIONS_REQUEST);
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public void getPermissionToBroadcastSMS() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.BROADCAST_SMS)
+                != PackageManager.PERMISSION_GRANTED) {
+            if (shouldShowRequestPermissionRationale(
+                    Manifest.permission.BROADCAST_SMS)) {
+                Toast.makeText(this, "Please allow permission!", Toast.LENGTH_SHORT).show();
+            }
+            requestPermissions(new String[]{Manifest.permission.BROADCAST_SMS},
+                    BROADCAST_SMS_PERMISSIONS_REQUEST);
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public void getPermissionToBroadcastWapPush() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.BROADCAST_WAP_PUSH)
+                != PackageManager.PERMISSION_GRANTED) {
+            if (shouldShowRequestPermissionRationale(
+                    Manifest.permission.BROADCAST_WAP_PUSH)) {
+                Toast.makeText(this, "Please allow permission!", Toast.LENGTH_SHORT).show();
+            }
+            requestPermissions(new String[]{Manifest.permission.BROADCAST_WAP_PUSH},
+                    BROADCAST_WAP_PUSH_PERMISSIONS_REQUEST);
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public void getPermissionToSendRespondViaMessage() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_RESPOND_VIA_MESSAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            if (shouldShowRequestPermissionRationale(
+                    Manifest.permission.SEND_RESPOND_VIA_MESSAGE)) {
+                Toast.makeText(this, "Please allow permission!", Toast.LENGTH_SHORT).show();
+            }
+            requestPermissions(new String[]{Manifest.permission.SEND_RESPOND_VIA_MESSAGE},
+                    SEND_RESPOND_VIA_MESSAGE_PERMISSIONS_REQUEST);
         }
     }
 
@@ -500,47 +522,92 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                            @NonNull String permissions[],
                                            @NonNull int[] grantResults) {
         // Make sure it's our original READ_CONTACTS request
-        if (requestCode == READ_SMS_PERMISSIONS_REQUEST) {
-            if (grantResults.length == 1 &&
-                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "Read SMS permission granted", Toast.LENGTH_SHORT).show();
-               // getPermissionToSendSMS();
+
+        switch (requestCode) {
+            case READ_SMS_PERMISSIONS_REQUEST: {
+                if (grantResults.length == 1 &&
+                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this, "Read SMS permission granted", Toast.LENGTH_SHORT).show();
+                    // getPermissionToSendSMS();
 
 
-            } else {
-                Toast.makeText(this, "Read SMS permission denied", Toast.LENGTH_SHORT).show();
-                finish();
+                } else {
+                    Toast.makeText(this, "Read SMS permission denied", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
             }
+            break;
 
-        }
-        else if (requestCode == SEND_SMS_PERMISSIONS_REQUEST) {
-            if (grantResults.length == 1 &&
-                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "Send SMS permission granted", Toast.LENGTH_SHORT).show();
-                //getPermissionToReadContacts();
+            case BROADCAST_SMS_PERMISSIONS_REQUEST: {
+                if (grantResults.length == 1 &&
+                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this, "Broadcast SMS permission granted", Toast.LENGTH_SHORT).show();
+                    // getPermissionToSendSMS();
 
 
-            } else {
-                Toast.makeText(this, "Send SMS permission denied", Toast.LENGTH_SHORT).show();
-                finish();
+                } else {
+                    Toast.makeText(this, "Broadcast SMS permission denied", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
             }
+            break;
 
-        }
+            case SEND_SMS_PERMISSIONS_REQUEST: {
+                if (grantResults.length == 1 &&
+                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this, "Send SMS permission granted", Toast.LENGTH_SHORT).show();
+                    //getPermissionToReadContacts();
 
-        else if (requestCode == READ_CONTACTS_PERMISSIONS_REQUEST) {
-            if (grantResults.length == 1 &&
-                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "Read Contacts permission granted", Toast.LENGTH_SHORT).show();
 
-
-            } else {
-                Toast.makeText(this, "Read Contacts permission denied", Toast.LENGTH_SHORT).show();
-                finish();
+                } else {
+                    Toast.makeText(this, "Send SMS permission denied", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
             }
+            break;
 
-        }
-        else {
-            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+            case BROADCAST_WAP_PUSH_PERMISSIONS_REQUEST: {
+                if (grantResults.length == 1 &&
+                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this, "Broadcast Wap Push permission granted", Toast.LENGTH_SHORT).show();
+                    //getPermissionToReadContacts();
+
+
+                } else {
+                    Toast.makeText(this, "Brd Wap Psh permission denied", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+            }
+            break;
+
+            case SEND_RESPOND_VIA_MESSAGE_PERMISSIONS_REQUEST: {
+                if (grantResults.length == 1 &&
+                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this, "Respond permission granted", Toast.LENGTH_SHORT).show();
+                    //getPermissionToReadContacts();
+
+
+                } else {
+                    Toast.makeText(this, "Respond permission denied", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+            }
+            break;
+
+            case READ_CONTACTS_PERMISSIONS_REQUEST: {
+                if (grantResults.length == 1 &&
+                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this, "Read Contacts permission granted", Toast.LENGTH_SHORT).show();
+
+
+                } else {
+                    Toast.makeText(this, "Read Contacts permission denied", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+            }
+            break;
+            default:
+                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
 
@@ -651,23 +718,61 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public class UpdateDatabaseMessages extends AsyncTask<String,Void,Void>{
+        int flag1=0;
 
         @Override
         protected Void doInBackground(String... strings) {
             ActiveAndroid.beginTransaction();
             try {
+
+
                 for (ArrayList<Message> tmpmsg : map_for_asyntask.values()) {
                     for (int j = 0; j < tmpmsg.size(); j++) {
                         Message mg = tmpmsg.get(j);
                         String tmp_id = mg.id;
-                        if ((new Select()
-                                .from(msg_sqldb.class)
-                                .where("address = ?", mg.sender_address)
-                                .where("timestamp = ?",mg.timestamp)
-                                .where("message = ?",mg.message)
+                        if ((new Select().from(msg_sqldb.class).where("address = ?", mg.sender_address)
+                                .where("timestamp = ?",mg.timestamp).where("message = ?",mg.message)
                                 .execute()).size() == 0) {
-                            msg_sqldb msg_db = new msg_sqldb(tmp_id,mg.sender_address,mg.date,mg.time,mg.type,mg.message,mg.timestamp,mg.spam);
-                            msg_db.save();
+
+                            msg_sqldb msgSqldb = new msg_sqldb(tmp_id, mg.sender_address, mg.date, mg.time, mg.type, mg.message, mg.timestamp, mg.spam);
+                            msgSqldb.save();
+                            flag1=1;
+
+                           /* String id=msgSqldb.msg_id;
+                            String add=msgSqldb.address;
+                            String dt=msgSqldb.date;
+                            String tm=msgSqldb.time;
+                            String tp=msgSqldb.type;
+                            String mm=msgSqldb.message;
+                            Long tmstmp=msgSqldb.timestamp;
+                            String sp=msgSqldb.spam;
+
+                            String msg_sender=add;
+                            if(sp.equals("spam")){
+                                Log.i("spam",msgSqldb.message);
+                                if(smsgsndrs.contains(msg_sender)){
+                                    smap_for_db.get(msg_sender).add(new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp),sp));
+                                }
+                                else{
+                                    smsgsndrs.add(msg_sender);
+                                    ArrayList<Message> temp=new ArrayList<>();
+                                    temp.add(new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp),sp));
+                                    smap_for_db.put(msg_sender,temp);
+                                    sfmsgs.add(mm);
+                                }
+                            }
+                            else{
+                                if(hmsgsndrs.contains(msg_sender)){
+                                    hmap_for_db.get(msg_sender).add(new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp),sp));
+                                }
+                                else{
+                                    hmsgsndrs.add(msg_sender);
+                                    ArrayList<Message> temp=new ArrayList<>();
+                                    temp.add(new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp),sp));
+                                    hmap_for_db.put(msg_sender,temp);
+                                    hfmsgs.add(mm);
+                                }
+                            }*/
                         }
                     }
                 }
@@ -681,26 +786,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         @Override
         protected void onPostExecute(Void aVoid) {
             Log.i("Completeted","Database Updation");
-            readfromdatabase();
+            //set();
+            if(flag1==1)
+                readfromdatabase();
         }
     }
 
     public class UpdateDatabasecontacts extends AsyncTask<String,Void,Void>{
+        int flag=0;
 
         @Override
         protected Void doInBackground(String... strings) {
             ActiveAndroid.beginTransaction();
             try {
-                String y,x;
+
                 for (String phn : contacts_for_asynctask.keySet()) {
                         String nm= contacts_for_asynctask.get(phn);
-                        if ((new Select()
-                                .from(cntcts_sqldb.class)
-                                .where("name = ?", nm)
-                                .where("number = ?", phn)
-                                .execute()).size() == 0) {
+                        if ((new Select().from(cntcts_sqldb.class).where("name = ?", nm).
+                                where("number = ?", phn).execute()).size() == 0) {
+
                             cntcts_sqldb cntctsSqldb=new cntcts_sqldb(nm,phn);
                             cntctsSqldb.save();
+                            flag=1;
 
                         }
                     }
@@ -715,25 +822,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         @Override
         protected void onPostExecute(Void aVoid) {
             Log.i("Completeted","Database phone Updation");
-            readcontactsfromdatabase();
+            if(flag==1)
+                readcontactsfromdatabase();
         }
     }
 
     public class CustomAdapter extends BaseAdapter {
         ArrayList<String> result;
         Context context;
-        int [] imageId;
-        int flag;
-        private LayoutInflater inflater=null;
+        private LayoutInflater inflater = null;
+
         public CustomAdapter(MainActivity mainActivity) {
             // TODO Auto-generated constructor stub
-            result=hmsgsndrs;
-            context=mainActivity;
-
-
-            inflater = ( LayoutInflater )context.
-                    getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            result = hmsgsndrs;
+            context = mainActivity;
+            inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         }
+
         @Override
         public int getCount() {
             // TODO Auto-generated method stub
@@ -752,50 +857,47 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return position;
         }
 
-        public class Holder
-        {
-            TextView tv,fmsg;
+        public class Holder {
+            TextView tv, fmsg;
             ImageView img;
 
         }
+
         @Override
         public View getView(final int position, View convertView, ViewGroup parent) {
-            // TODO Auto-generated method stub
-            kamal.saqib.spamshield.MainActivity.CustomAdapter.Holder holder= new kamal.saqib.spamshield.MainActivity.CustomAdapter.Holder();
+
+            kamal.saqib.spamshield.MainActivity.CustomAdapter.Holder holder = new kamal.saqib.spamshield.MainActivity.CustomAdapter.Holder();
             View rowView;
             rowView = inflater.inflate(R.layout.front_page_listview, null);
-            holder.tv=(TextView) rowView.findViewById(R.id.phone_number);
-            holder.fmsg=(TextView) rowView.findViewById(R.id.fmsgs);
-            holder.img=(ImageView) rowView.findViewById(R.id.imageview);
-           holder.tv.setText(result.get(position));
-           holder.fmsg.setText(hfmsgs.get(position));
-           String ph_no=result.get(position);
-           if(contacts_for_db.containsKey(ph_no))
-               holder.tv.setText(contacts_for_db.get(ph_no));
-            //holder.img.setImageResource(imageId[position]);
 
-            final SwipeMenuCreator creator;
-            creator = new SwipeMenuCreator() {
+            holder.tv = rowView.findViewById(R.id.phone_number);
+            holder.fmsg = rowView.findViewById(R.id.fmsgs);
+            holder.img = rowView.findViewById(R.id.imageview);
+
+            holder.tv.setText(result.get(position));
+            holder.fmsg.setText(hfmsgs.get(position));
+
+            String ph_no = result.get(position);
+           if (contacts_for_db.containsKey(ph_no))
+                holder.tv.setText(contacts_for_db.get(ph_no));
+
+
+           /*final SwipeMenuCreator creator;
+           // creator = new SwipeMenuCreator() {
 
                 @Override
                 public void create(SwipeMenu menu) {
-                    if(flag==0)
-                        flag=1;
-                    else
-                        flag=0;
+
                     // create "open" item
                     SwipeMenuItem deleteItem = new SwipeMenuItem(
                             getApplicationContext());
                     // set item background
-                    deleteItem.setBackground(new ColorDrawable(Color.rgb(148, 143,
-                            143)));
+                    deleteItem.setBackground(new ColorDrawable(Color.rgb(148, 143, 143)));
                     // set item width
                     deleteItem.setWidth(150);
-
                     deleteItem.setIcon(R.drawable.ic_bin);
                     // add to menu
                     menu.addMenuItem(deleteItem);
-
                     // create "delete" item
                     SwipeMenuItem blockItem = new SwipeMenuItem(
                             getApplicationContext());
@@ -812,7 +914,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             };
 
 // set creator
-            lv.setMenuCreator(creator);
+          /*  lv.setMenuCreator(creator);
 
             lv.setOnMenuItemClickListener(new SwipeMenuListView.OnMenuItemClickListener() {
                 @Override
@@ -828,27 +930,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     // false : close the menu; true : not close the menu
                     return true;
                 }
-            });
+            });*/
 
             rowView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (flag == 0) {
 
-                        String p = hmsgsndrs.get(position);
-                        Intent in = new Intent(getBaseContext(), single_user_msg.class);
-                        Bundle args = new Bundle();
-                        args.putSerializable("ARRAYLIST", (Serializable) hmap_for_db.get(p));
-                        in.putExtra("BUNDLE", args);
-                        startActivity(in);
-                    }
+                    String p = hmsgsndrs.get(position);
+                    Intent in = new Intent(getBaseContext(), single_user_msg.class);
+                    Bundle args = new Bundle();
+                    args.putSerializable("ARRAYLIST", hmap_for_db.get(p));
+                    in.putExtra("BUNDLE", args);
+                    startActivity(in);
+
                 }
             });
 
 
             return rowView;
         }
-
     }
 
     public static MainActivity instance() {
@@ -860,9 +960,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onStart();
         inst = this;
     }
-
-
-
 
     public class sendJson extends  AsyncTask<String ,Void,Void>{
         String msg,id,sender,date,timestamp,result;
@@ -935,15 +1032,42 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        //readfromdatabase();
-        }
-
-    @Override
     protected void onDestroy() {
         super.onDestroy();
-        MainActivity mainActivity=new MainActivity();
+       // MainActivity mainActivity=new MainActivity();
 
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        final String myPackageName = getPackageName();
+        if (!Telephony.Sms.getDefaultSmsPackage(this).equals(myPackageName)) {
+            // App is not default.
+            // Show the "not currently set as the default SMS app" interface
+            //View viewGroup = findViewById(R.id.not_default_app);
+           // viewGroup.setVisibility(View.VISIBLE);
+
+            // Set up a button that allows the user to change the default SMS app
+            Button button = (Button) findViewById(R.id.button);
+            button.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    Intent intent =
+                            new Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT);
+                    intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME,
+                            myPackageName);
+                    startActivity(intent);
+                }
+            });
+        } else {
+            // App is the default.
+            // Hide the "not currently set as the default SMS app" interface
+           // View viewGroup = findViewById(R.id.not_default_app);
+            //viewGroup.setVisibility(View.GONE);
+            Toast.makeText(getApplicationContext(),"YESAH",Toast.LENGTH_LONG).show();
+        }
+    }
+
+
 }

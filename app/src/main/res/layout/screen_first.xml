@@ -30,7 +30,8 @@
                 android:layout_alignLeft="@+id/txt_msg1"
                 android:layout_alignStart="@+id/txt_msg1"
                 android:layout_marginBottom="8dp"
-                android:background="@drawable/shield_logo" />
+                android:background="@drawable/shield_logo"
+                android:id="@+id/imageView" />
 
             <TextView
                 android:id="@+id/txt_spam_count"
@@ -76,6 +77,15 @@
 
                 />
 
+            <Button
+                android:id="@+id/button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@+id/imageView"
+                android:layout_marginBottom="59dp"
+                android:layout_toStartOf="@+id/imageView"
+                android:text="Button" />
+
         </RelativeLayout>
 
         <FrameLayout
@@ -83,12 +93,12 @@
             android:layout_height="match_parent"
             android:layout_below="@+id/box">
 
-            <com.baoyz.swipemenulistview.SwipeMenuListView
+            <ListView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/lv_msg"
                 android:layout_marginTop="15dp">
-            </com.baoyz.swipemenulistview.SwipeMenuListView>
+            </ListView>
 
             <android.support.design.widget.FloatingActionButton
                 android:id="@+id/big_button"
