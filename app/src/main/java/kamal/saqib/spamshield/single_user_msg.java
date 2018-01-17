@@ -56,10 +56,11 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
         Intent intent = getIntent();
         Bundle args = intent.getBundleExtra("BUNDLE");
        msgs = (ArrayList<Message>) args.getSerializable("ARRAYLIST");
-        for(int i=0;i<msgs.size();i++) {
+       phoneNo=(String) args.getSerializable("phonenumber");
+       // for(int i=0;i<msgs.size();i++) {
 //            arrayAdapter.add(msgs.get(i).message+msgs.get(i).spam+msgs.get(i).type);
-            phoneNo = msgs.get(i).sender_address;
-        }
+            //phoneNo = msgs.get(i).sender_address;
+        //}
         sendButton.setOnClickListener(this);
         messages.setAdapter(new single_user_msg.CustomAdapter(this));
 

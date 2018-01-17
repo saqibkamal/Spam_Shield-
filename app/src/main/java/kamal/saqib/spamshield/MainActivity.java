@@ -23,6 +23,7 @@ import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -35,6 +36,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
@@ -57,6 +59,8 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.Serializable;
@@ -73,6 +77,10 @@ import static kamal.saqib.spamshield.R.id.txt_msg1;
 import static kamal.saqib.spamshield.R.id.txt_spam_count;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
+
+    private DrawerLayout mDrawer;
+    private  android.support.v7.app.ActionBarDrawerToggle toggle;
+
     private static final int READ_SMS_PERMISSIONS_REQUEST = 1;
     private static final int SEND_SMS_PERMISSIONS_REQUEST = 2;
     private static final int READ_CONTACTS_PERMISSIONS_REQUEST = 3;
@@ -81,7 +89,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private RelativeLayout layoutMain;
     private RelativeLayout layoutContent;
     private  boolean isOpen=false;
-
+    TextView spamcount;
 
 
     ListView lv;
@@ -102,14 +110,50 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         //getAllPermission();
 
+        mDrawer = (DrawerLayout)findViewById(R.id.drawer_layout);
+        toggle = new android.support.v7.app.ActionBarDrawerToggle(this,mDrawer,R.string.open,R.string.close);
+        mDrawer.addDrawerListener(toggle);
+        toggle.syncState();
+
+        /*ImageView searchImage = findViewById(R.id.img_search_icon);
+        searchImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(getBaseContext(),"Search",Toast.LENGTH_SHORT).show();
+            }
+        });*/
+
+        final String myPackageName = getPackageName();
+        if (!Telephony.Sms.getDefaultSmsPackage(this).equals(myPackageName)) {
+            Intent intent =
+                    new Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT);
+            intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME,
+                    myPackageName);
+            startActivity(intent);
+        }
+        else {
+            Toast.makeText(getApplicationContext(),"Default Messaging App",Toast.LENGTH_LONG).show();
+        }
+
+
         layoutMain=findViewById(R.id.layoutMain);
-        layoutContent=findViewById(R.id.layoutContent);
+        //layoutContent=findViewById(R.id.layoutContent);
         fab=findViewById(R.id.big_button);
+        spamcount=findViewById(R.id.txt_spam_count);
+        setcount();
 
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                viewMenu();
+
+                Intent in=new Intent(getApplicationContext(),selectcontacts.class);
+                Bundle args = new Bundle();
+                //args.putSerializable("allmsgs", hmap_for_db);
+                args.putSerializable("allcntcts",contacts_for_db);
+                in.putExtra("BUNDLE", args);
+
+                //viewMenu();
+                startActivity(in);
             }
         });
 
@@ -126,7 +170,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         alertDialog = new SpotsDialog(this);
         alertDialog.show();
-        alertDialog.setTitle("Setting Up...");
 
         showActionBar();
 
@@ -165,7 +208,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View v = inflater.inflate(R.layout.screen1,null);
         final ActionBar bar = getSupportActionBar();
-        bar.setDisplayHomeAsUpEnabled(false);
+        bar.setDisplayHomeAsUpEnabled(true);
         bar.setDisplayShowHomeEnabled(false);
         bar.setDisplayShowCustomEnabled(true);
         bar.setDisplayShowTitleEnabled(false);
@@ -283,6 +326,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             msg_countdb msgCountdb =new msg_countdb(date,1,message.spam.equals("spam")?1:0);
             msgCountdb.save();
             Log.i("Update on old","Successful");
+            setcount();
         }
         else{
             List<msg_countdb> msgCountdb=  new Select().from(msg_countdb.class).where("date = ?",date).execute();
@@ -311,6 +355,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if(mg.spam.equals("ham"))
             shownotification(mg);
         addtocountdb(mg);
+
         if ((new Select()
                 .from(msg_sqldb.class)
                 .where("address = ?", mg.sender_address)
@@ -416,10 +461,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         lv.setAdapter(new CustomAdapter(this));
     }
 
+    public void setcount(){
+        SimpleDateFormat simpleDateFormat=new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
+        Long t=System.currentTimeMillis();
+        String date=simpleDateFormat.format(new Date(t));
+
+        List<msg_countdb> msgCountdbs = new Select("*").from(msg_countdb.class).
+                where("date = ?",date).execute();
+
+        if(msgCountdbs==null || msgCountdbs.size()==0){
+            spamcount.setText("0");
+        }
+        else{
+            spamcount.setText(msgCountdbs.get(0).spammsg);
+        }
+
+
+    }
+
 
     @Override
     public void onClick(View view) {
-        
+
     }
 
 
@@ -636,6 +699,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         @Override
         protected void onPostExecute(Void aVoid) {
             Log.i("Completeted","Mesage Updation");
+            //sendOldMessage sendOldMessage=new sendOldMessage();
+            //sendOldMessage.execute();
            UpdateDatabaseMessages updateDatabaseMessages=new UpdateDatabaseMessages();
            updateDatabaseMessages.execute();
 
@@ -865,6 +930,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Intent in = new Intent(getBaseContext(), single_user_msg.class);
                     Bundle args = new Bundle();
                     args.putSerializable("ARRAYLIST", hmap_for_db.get(p));
+                    args.putSerializable("phonenumber",hmap_for_db.get(p).get(0).sender_address);
                     in.putExtra("BUNDLE", args);
                     startActivity(in);
 
@@ -891,11 +957,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         @Override
         protected Void doInBackground(String... strings) {
+
              msg=strings[0];
              id=strings[1];
              sender=strings[3];
              date=strings[2];
              timestamp=strings[4];
+
 
             HttpClient httpclient;
             HttpResponse response = null;
@@ -939,8 +1007,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         @Override
         protected void onPostExecute(Void aVoid) {
             Log.i("Completeted","Chk ");
-
-
             String ans;
             if(result.contains("spam")){
                 ans="spam";
@@ -956,6 +1022,64 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
+    public class sendOldMessage extends AsyncTask<String,Void,Void>{
+
+        @Override
+        protected Void doInBackground(String... strings) {
+            for(String messages:map_for_asyntask.keySet()){
+                for(Message message:map_for_asyntask.get(messages)){
+                    HttpClient httpclient;
+                    HttpResponse response = null;
+                    String result = "";
+                    try{
+                        httpclient = new DefaultHttpClient();
+
+                        HttpPost post = new HttpPost("https://spamshield.herokuapp.com/predict");
+
+                        JSONObject json = new JSONObject();
+                        json.put("messagejson", message.message);
+                        StringEntity se;
+                        se = new StringEntity(json.toString());
+                        post.setEntity(se);
+
+                        post.setHeader("Content-type", "application/json");
+                        response = httpclient.execute(post);
+                        Log.i("msgr","result");
+
+                    } catch (Exception e){
+                        result = "error1";
+                    }
+
+                    try{
+                        BufferedReader rd = new BufferedReader(new InputStreamReader(
+                                response.getEntity().getContent()));
+                        String line="";
+                        while((line = rd.readLine()) != null){
+                            result = result + line;
+                        }
+                        Log.i("msgr",result);
+                    } catch(Exception e){
+                        result = "error2";
+                    }
+
+                    if(result.contains("spam"))
+                        message.spam="spam";
+                    else
+                        message.spam="ham";
+                }
+            }
+
+            return null;
+        }
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            Log.i("All msgs send to","server");
+            UpdateDatabaseMessages updateDatabaseMessages=new UpdateDatabaseMessages();
+            updateDatabaseMessages.execute();
+
+        }
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -967,31 +1091,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onResume() {
         super.onResume();
 
-        final String myPackageName = getPackageName();
-        if (!Telephony.Sms.getDefaultSmsPackage(this).equals(myPackageName)) {
-            // App is not default.
-            // Show the "not currently set as the default SMS app" interface
-            //View viewGroup = findViewById(R.id.not_default_app);
-           // viewGroup.setVisibility(View.VISIBLE);
-
-            // Set up a button that allows the user to change the default SMS app
-            Button button = (Button) findViewById(R.id.button);
-            button.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    Intent intent =
-                            new Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT);
-                    intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME,
-                            myPackageName);
-                    startActivity(intent);
-                }
-            });
-        } else {
-            // App is the default.
-            // Hide the "not currently set as the default SMS app" interface
-           // View viewGroup = findViewById(R.id.not_default_app);
-            //viewGroup.setVisibility(View.GONE);
-            Toast.makeText(getApplicationContext(),"YESAH",Toast.LENGTH_LONG).show();
-        }
     }
 
 
