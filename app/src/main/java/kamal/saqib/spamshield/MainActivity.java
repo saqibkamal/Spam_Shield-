@@ -41,6 +41,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.activeandroid.ActiveAndroid;
+import com.activeandroid.Model;
 import com.activeandroid.query.Select;
 import com.activeandroid.query.Update;
 import com.baoyz.swipemenulistview.SwipeMenu;
@@ -81,9 +82,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private RelativeLayout layoutContent;
     private  boolean isOpen=false;
 
-    private static final int BROADCAST_SMS_PERMISSIONS_REQUEST = 4;
-    private static final int BROADCAST_WAP_PUSH_PERMISSIONS_REQUEST = 5;
-    private static final int SEND_RESPOND_VIA_MESSAGE_PERMISSIONS_REQUEST = 6;
 
 
     ListView lv;
@@ -287,16 +285,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Log.i("Update on old","Successful");
         }
         else{
-            msg_countdb msgCountdb= (msg_countdb) new Select().from(msg_countdb.class).where("date = ?",date).execute();
+            List<msg_countdb> msgCountdb=  new Select().from(msg_countdb.class).where("date = ?",date).execute();
         int x=0;
-            int tot=msgCountdb.totalmsg;
-            int spa=msgCountdb.spammsg;
+            int tot=msgCountdb.get(0).totalmsg;
+            int spa=msgCountdb.get(0).spammsg;
             if(message.spam.equals("spam")) {
                 spa++;
             }
 
             new Update(msg_countdb.class)
-                    .set("tototalmsg = ?", tot+1)
+                    .set("totalmsg = ?", tot+1)
                     .where("date = ?", date)
                     .execute();
 
@@ -421,8 +419,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View view) {
-
-
+        
     }
 
 
@@ -447,44 +444,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.M)
-    public void getPermissionToBroadcastSMS() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.BROADCAST_SMS)
-                != PackageManager.PERMISSION_GRANTED) {
-            if (shouldShowRequestPermissionRationale(
-                    Manifest.permission.BROADCAST_SMS)) {
-                Toast.makeText(this, "Please allow permission!", Toast.LENGTH_SHORT).show();
-            }
-            requestPermissions(new String[]{Manifest.permission.BROADCAST_SMS},
-                    BROADCAST_SMS_PERMISSIONS_REQUEST);
-        }
-    }
 
-    @RequiresApi(api = Build.VERSION_CODES.M)
-    public void getPermissionToBroadcastWapPush() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.BROADCAST_WAP_PUSH)
-                != PackageManager.PERMISSION_GRANTED) {
-            if (shouldShowRequestPermissionRationale(
-                    Manifest.permission.BROADCAST_WAP_PUSH)) {
-                Toast.makeText(this, "Please allow permission!", Toast.LENGTH_SHORT).show();
-            }
-            requestPermissions(new String[]{Manifest.permission.BROADCAST_WAP_PUSH},
-                    BROADCAST_WAP_PUSH_PERMISSIONS_REQUEST);
-        }
-    }
 
-    @RequiresApi(api = Build.VERSION_CODES.M)
-    public void getPermissionToSendRespondViaMessage() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_RESPOND_VIA_MESSAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-            if (shouldShowRequestPermissionRationale(
-                    Manifest.permission.SEND_RESPOND_VIA_MESSAGE)) {
-                Toast.makeText(this, "Please allow permission!", Toast.LENGTH_SHORT).show();
-            }
-            requestPermissions(new String[]{Manifest.permission.SEND_RESPOND_VIA_MESSAGE},
-                    SEND_RESPOND_VIA_MESSAGE_PERMISSIONS_REQUEST);
-        }
-    }
+
+
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     public void getPermissionToSendSMS(){
@@ -538,19 +501,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
             break;
 
-            case BROADCAST_SMS_PERMISSIONS_REQUEST: {
-                if (grantResults.length == 1 &&
-                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Toast.makeText(this, "Broadcast SMS permission granted", Toast.LENGTH_SHORT).show();
-                    // getPermissionToSendSMS();
 
-
-                } else {
-                    Toast.makeText(this, "Broadcast SMS permission denied", Toast.LENGTH_SHORT).show();
-                    finish();
-                }
-            }
-            break;
 
             case SEND_SMS_PERMISSIONS_REQUEST: {
                 if (grantResults.length == 1 &&
@@ -566,33 +517,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
             break;
 
-            case BROADCAST_WAP_PUSH_PERMISSIONS_REQUEST: {
-                if (grantResults.length == 1 &&
-                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Toast.makeText(this, "Broadcast Wap Push permission granted", Toast.LENGTH_SHORT).show();
-                    //getPermissionToReadContacts();
 
-
-                } else {
-                    Toast.makeText(this, "Brd Wap Psh permission denied", Toast.LENGTH_SHORT).show();
-                    finish();
-                }
-            }
-            break;
-
-            case SEND_RESPOND_VIA_MESSAGE_PERMISSIONS_REQUEST: {
-                if (grantResults.length == 1 &&
-                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Toast.makeText(this, "Respond permission granted", Toast.LENGTH_SHORT).show();
-                    //getPermissionToReadContacts();
-
-
-                } else {
-                    Toast.makeText(this, "Respond permission denied", Toast.LENGTH_SHORT).show();
-                    finish();
-                }
-            }
-            break;
 
             case READ_CONTACTS_PERMISSIONS_REQUEST: {
                 if (grantResults.length == 1 &&
