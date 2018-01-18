@@ -97,6 +97,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     HashMap<String,ArrayList<Message>> map_for_asyntask,smap_for_db,hmap_for_db;
     ArrayList<String> msgids_for_asynctask,smsgsndrs,sfmsgs,hfmsgs,hmsgsndrs;
+    HashMap<String,Message> s_fmsg,h_fmsg;
     SimpleDateFormat simpleDateFormat;
     HashMap<String,String> contacts_for_db,contacts_for_asynctask;
     private static MainActivity inst;
@@ -139,7 +140,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         layoutMain=findViewById(R.id.layoutMain);
         //layoutContent=findViewById(R.id.layoutContent);
         fab=findViewById(R.id.big_button);
-        spamcount=findViewById(R.id.txt_spam_count);
         setcount();
 
         fab.setOnClickListener(new View.OnClickListener() {
@@ -179,6 +179,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         hmsgsndrs=new ArrayList<>();
         sfmsgs=new ArrayList<>();
         hfmsgs=new ArrayList<>();
+        s_fmsg=new HashMap<>();
+        h_fmsg=new HashMap<>();
 
         GetContact getContact = new GetContact();
         getContact.execute();
@@ -237,6 +239,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
     public void readfromdatabase(){
+        hmap_for_db=new HashMap<>();
+        smap_for_db=new HashMap<>();
+        smsgsndrs=new ArrayList<>();
+        hmsgsndrs=new ArrayList<>();
+        sfmsgs=new ArrayList<>();
+        hfmsgs=new ArrayList<>();
 
         ActiveAndroid.beginTransaction();
         try {
@@ -246,47 +254,54 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             for (msg_sqldb msgSqldb : msg_from_db){
                 String id=msgSqldb.msg_id;
-            String add=msgSqldb.address;
-            String dt=msgSqldb.date;
-            String tm=msgSqldb.time;
-            String tp=msgSqldb.type;
-            String mm=msgSqldb.message;
-            Long tmstmp=msgSqldb.timestamp;
-            String sp=msgSqldb.spam;
+                String add=msgSqldb.address;
+                String dt=msgSqldb.date;
+                String tm=msgSqldb.time;
+                String tp=msgSqldb.type;
+                String mm=msgSqldb.message;
+                Long tmstmp=msgSqldb.timestamp;
+                String sp=msgSqldb.spam;
 
-            String msg_sender=add;
-            if(sp.equals("spam")){
-                Log.i("spam",msgSqldb.message);
-                if(smsgsndrs.contains(msg_sender)){
-                    smap_for_db.get(msg_sender).add(new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp),sp));
+                String msg_sender=add;
+                if(sp.equals("spam")){
+                    Log.i("spam",msgSqldb.message);
+                    if(smsgsndrs.contains(msg_sender)){
+
+                        //smap_for_db.get(msg_sender).add(new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp),sp));
+                        //s_fmsg.remove(add);
+                        s_fmsg.put(add,new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp),sp));
+                    }
+                    else{
+                        smsgsndrs.add(msg_sender);
+                        ArrayList<Message> temp=new ArrayList<>();
+                        temp.add(new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp),sp));
+                        smap_for_db.put(msg_sender,temp);
+                        s_fmsg.put(add,new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp),sp));
+                        sfmsgs.add(mm);
+                    }
                 }
                 else{
-                    smsgsndrs.add(msg_sender);
-                    ArrayList<Message> temp=new ArrayList<>();
-                    temp.add(new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp),sp));
-                    smap_for_db.put(msg_sender,temp);
-                    sfmsgs.add(mm);
+                    if(hmsgsndrs.contains(msg_sender)){
+                        //Log.i("repeated",msg_sender);
+                        //h_fmsg.remove(add);
+                        //h_fmsg.put(add,new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp),sp));
+                        hmap_for_db.get(msg_sender).add(new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp),sp));
+                    }
+                    else{
+                        //Log.i("not repeated",msg_sender);
+                        hmsgsndrs.add(msg_sender);
+                        ArrayList<Message> temp=new ArrayList<>();
+                        temp.add(new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp),sp));
+                        hmap_for_db.put(msg_sender,temp);
+                        h_fmsg.put(add,new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp),sp));
+                        hfmsgs.add(mm);
+                    }
                 }
             }
-            else{
-                if(hmsgsndrs.contains(msg_sender)){
-                    //Log.i("repeated",msg_sender);
-                    hmap_for_db.get(msg_sender).add(new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp),sp));
-                }
-                else{
-                    Log.i("not repeated",msg_sender);
-                    hmsgsndrs.add(msg_sender);
-                    ArrayList<Message> temp=new ArrayList<>();
-                    temp.add(new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp),sp));
-                    hmap_for_db.put(msg_sender,temp);
-                    hfmsgs.add(mm);
-                }
-            }
-        }
-        if (hmap_for_db.size() != 0 || smap_for_db.size() != 0)
-            alertDialog.dismiss();
-        lv.setAdapter(new CustomAdapter(this));
-        ActiveAndroid.setTransactionSuccessful();
+            if (hmap_for_db.size() != 0 || smap_for_db.size() != 0)
+                alertDialog.dismiss();
+            lv.setAdapter(new CustomAdapter(this));
+            ActiveAndroid.setTransactionSuccessful();
 
         }
         finally {
@@ -298,22 +313,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         if (message.spam.equals("spam")) {
             if (smsgsndrs.contains(message.sender_address)) {
+                s_fmsg.remove(message.sender_address);
+                s_fmsg.put(message.sender_address,message);
                 smap_for_db.get(message.sender_address).add(message);
             } else {
                 smsgsndrs.add(message.sender_address);
                 ArrayList<Message> temp = new ArrayList<>();
                 temp.add(message);
                 smap_for_db.put(message.sender_address, temp);
+                s_fmsg.put(message.sender_address,message);
                 sfmsgs.add(message.message);
             }
         } else {
             if (hmsgsndrs.contains(message.sender_address)) {
+                h_fmsg.remove(message.sender_address);
+                h_fmsg.put(message.sender_address,message);
                 hmap_for_db.get(message.sender_address).add(message);
             } else {
                 hmsgsndrs.add(message.sender_address);
                 ArrayList<Message> temp = new ArrayList<>();
                 temp.add(message);
                 hmap_for_db.put(message.sender_address, temp);
+                h_fmsg.put(message.sender_address,message);
                 hfmsgs.add(message.message);
             }
         }
@@ -326,11 +347,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             msg_countdb msgCountdb =new msg_countdb(date,1,message.spam.equals("spam")?1:0);
             msgCountdb.save();
             Log.i("Update on old","Successful");
-            setcount();
+
         }
         else{
             List<msg_countdb> msgCountdb=  new Select().from(msg_countdb.class).where("date = ?",date).execute();
-        int x=0;
+            int x=0;
             int tot=msgCountdb.get(0).totalmsg;
             int spa=msgCountdb.get(0).spammsg;
             if(message.spam.equals("spam")) {
@@ -347,8 +368,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     .where("date = ?", date)
                     .execute();
 
-            Log.i("Update","Successful");
+            Log.i("Update on new","Successful");
         }
+        setcount();
     }
 
     public void addnewmsgtodb(Message mg){
@@ -377,8 +399,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void gotnewmessage(String id,String sender,String date,String msg,String timestamp){
 
 
-        sendJson json=new sendJson();
-        json.execute(msg,id,date,sender,timestamp);
+       // sendJson json=new sendJson();
+        //json.execute(msg,id,date,sender,timestamp);
     }
 
     public void shownotification(Message message) {
@@ -462,18 +484,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void setcount(){
+        spamcount=findViewById(R.id.txt_spam_count);
+
         SimpleDateFormat simpleDateFormat=new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
         Long t=System.currentTimeMillis();
         String date=simpleDateFormat.format(new Date(t));
+
+        date=date.substring(0,10);
 
         List<msg_countdb> msgCountdbs = new Select("*").from(msg_countdb.class).
                 where("date = ?",date).execute();
 
         if(msgCountdbs==null || msgCountdbs.size()==0){
+
             spamcount.setText("0");
         }
         else{
-            spamcount.setText(msgCountdbs.get(0).spammsg);
+
+
+            spamcount.setText(String.valueOf(msgCountdbs.get(0).spammsg));
         }
 
 
@@ -488,8 +517,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     public void  getAllPermission(){
-       getPermissionToReadSMS();
-       getPermissionToReadContacts();
+        getPermissionToReadSMS();
+        getPermissionToReadContacts();
         getPermissionToSendSMS();
 
     }
@@ -676,6 +705,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 String type=smsInboxCursor.getString(typeColumn);
                 String id=smsInboxCursor.getString(typeid);
                 Long tt= Long.valueOf(date);
+                msg=msg.trim();
                 String dateFromSms = simpleDateFormat.format(new Date(tt));
 
 
@@ -701,8 +731,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Log.i("Completeted","Mesage Updation");
             //sendOldMessage sendOldMessage=new sendOldMessage();
             //sendOldMessage.execute();
-           UpdateDatabaseMessages updateDatabaseMessages=new UpdateDatabaseMessages();
-           updateDatabaseMessages.execute();
+            UpdateDatabaseMessages updateDatabaseMessages=new UpdateDatabaseMessages();
+            updateDatabaseMessages.execute();
 
         }
     }
@@ -736,7 +766,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             String mm=msgSqldb.message;
                             Long tmstmp=msgSqldb.timestamp;
                             String sp=msgSqldb.spam;
-
                             String msg_sender=add;
                             if(sp.equals("spam")){
                                 Log.i("spam",msgSqldb.message);
@@ -791,16 +820,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             try {
 
                 for (String phn : contacts_for_asynctask.keySet()) {
-                        String nm= contacts_for_asynctask.get(phn);
-                        if ((new Select().from(cntcts_sqldb.class).where("name = ?", nm).
-                                where("number = ?", phn).execute()).size() == 0) {
+                    String nm= contacts_for_asynctask.get(phn);
+                    if ((new Select().from(cntcts_sqldb.class).where("name = ?", nm).
+                            where("number = ?", phn).execute()).size() == 0) {
 
-                            cntcts_sqldb cntctsSqldb=new cntcts_sqldb(nm,phn);
-                            cntctsSqldb.save();
-                            flag=1;
+                        cntcts_sqldb cntctsSqldb=new cntcts_sqldb(nm,phn);
+                        cntctsSqldb.save();
+                        flag=1;
 
-                        }
                     }
+                }
                 ActiveAndroid.setTransactionSuccessful();
             }
             finally{
@@ -867,17 +896,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             holder.tv.setText(result.get(position));
             holder.fmsg.setText(hfmsgs.get(position));
 
+           holder.fmsg.setText(h_fmsg.get(result.get(position)).message);
+
             String ph_no = result.get(position);
-           if (contacts_for_db.containsKey(ph_no))
+            if (contacts_for_db.containsKey(ph_no))
                 holder.tv.setText(contacts_for_db.get(ph_no));
 
 
            /*final SwipeMenuCreator creator;
            // creator = new SwipeMenuCreator() {
-
                 @Override
                 public void create(SwipeMenu menu) {
-
                     // create "open" item
                     SwipeMenuItem deleteItem = new SwipeMenuItem(
                             getApplicationContext());
@@ -902,10 +931,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     menu.addMenuItem(blockItem);
                 }
             };
-
 // set creator
           /*  lv.setMenuCreator(creator);
-
             lv.setOnMenuItemClickListener(new SwipeMenuListView.OnMenuItemClickListener() {
                 @Override
                 public boolean onMenuItemClick(int position, SwipeMenu menu, int index) {
@@ -952,22 +979,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         inst = this;
     }
 
-    public class sendJson extends  AsyncTask<String ,Void,Void>{
+   /* public class sendJson extends  AsyncTask<String ,Void,Void>{
         String msg,id,sender,date,timestamp,result;
 
         @Override
         protected Void doInBackground(String... strings) {
 
-             msg=strings[0];
-             id=strings[1];
-             sender=strings[3];
-             date=strings[2];
-             timestamp=strings[4];
+            msg=strings[0];
+            id=strings[1];
+            sender=strings[3];
+            date=strings[2];
+            timestamp=strings[4];
 
 
             HttpClient httpclient;
             HttpResponse response = null;
-             result = "";
+            result = "";
             try{
                 httpclient = new DefaultHttpClient();
 
@@ -1021,7 +1048,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
     }
-
+*/
     public class sendOldMessage extends AsyncTask<String,Void,Void>{
 
         @Override
@@ -1083,7 +1110,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onDestroy() {
         super.onDestroy();
-       // MainActivity mainActivity=new MainActivity();
+        // MainActivity mainActivity=new MainActivity();
 
     }
 
@@ -1092,6 +1119,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onResume();
 
     }
+
+
 
 
 }

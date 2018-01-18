@@ -2,34 +2,36 @@
 
     <RelativeLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/trans">
 
-        <EditText
-            android:id="@+id/edtxt_search_bar"
-            style="@style/editTextEntryName"
-            android:layout_width="244dp"
-            android:layout_height="32dp"
-            android:background="@drawable/search_bar"
-            android:fontFamily="@font/nexa_l"
-            android:hint="Search"
-            android:maxLength="19"
-            android:paddingLeft="9dp"
-            android:paddingRight="9dp"
-            android:layout_marginTop="3dp"
-            android:layout_marginLeft="10dp"
-            android:textSize="17dp" />
+    <EditText
+        android:id="@+id/edtxt_search_bar"
+        style="@style/editTextEntryName"
+        android:layout_width="244dp"
+        android:layout_height="32dp"
+        android:background="@drawable/search_bar"
+        android:fontFamily="@font/nexa_l"
+        android:hint="Search"
+        android:maxLength="19"
+        android:paddingLeft="9dp"
+        android:paddingRight="9dp"
+        android:layout_marginTop="3dp"
+        android:layout_marginLeft="10dp"
+        android:textSize="17dp" />
 
-        <ImageView
-            android:id="@+id/img_search_icon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="210dp"
-            android:layout_marginTop="3dp"
-            android:background="@drawable/icon_search"
-            android:paddingLeft="17dp"
-            android:paddingRight="7dp" />
+    <ImageView
+        android:id="@+id/img_search_icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="210dp"
+        android:layout_marginTop="3dp"
+        android:background="@drawable/icon_search"
+        android:paddingLeft="17dp"
+        android:paddingRight="7dp" />
+
 
         <ImageView
             android:layout_width="35dp"
