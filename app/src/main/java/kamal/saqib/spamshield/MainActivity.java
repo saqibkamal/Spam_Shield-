@@ -28,8 +28,11 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewAnimationUtils;
 import android.view.ViewGroup;
@@ -253,6 +256,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }
         });
+
+
+        //yei ho sharedpref code
+        PreferenceManager.setDefaultValues(this, R.xml.pref, false);
+
+        SharedPreferences appPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        Boolean currentNotifSetting = appPrefs.getBoolean("notif", true);
+        String currentNotif = currentNotifSetting.toString();
+
+        Toast.makeText(getApplicationContext(), currentNotif, Toast.LENGTH_SHORT).show();
+
 
     }
 
@@ -1170,6 +1184,36 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onResume() {
         super.onResume();
 
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.navigation_items, menu);
+        return true;
+
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        int id = item.getItemId();
+
+        if(id == R.id.blocked){
+
+            Toast.makeText(getApplicationContext(), "yolo", Toast.LENGTH_SHORT).show();
+
+        } else if (id==R.id.settings){
+            Intent i = new Intent(this, MyPreferencesActivity.class);
+            startActivity(i);
+
+
+        }
+//        else if (id==android.R.id.home){
+//
+//            finish();
+//
+//        }
+        return super.onOptionsItemSelected(item);
     }
 
 
