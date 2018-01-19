@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
+        android:id="@+id/msg_bar_layout"
+        android:background="@drawable/msg_bar"
+        android:layout_alignParentBottom="true"
+        android:weightSum="12"
+        android:paddingRight="2dp"
+        android:paddingLeft="12dp"
+        android:gravity="center"
+        >
+      <RelativeLayout
+          android:layout_width="35dp"
+          android:layout_height="35dp"
+          android:background="@drawable/add_emo_circle"
+          android:layout_centerVertical="true"
+          android:layout_weight="1"
+          android:gravity="center">
+          <ImageView
+              android:layout_width="25dp"
+              android:layout_height="25dp"
+              android:id="@+id/imgv_emo"
+              android:background="@mipmap/ic_add_emo"
+              />
+      </RelativeLayout>
+
+        <EditText
+            android:id="@+id/edtxt_msg_bar"
+            android:layout_width="287dp"
+            android:layout_height="40dp"
+            android:layout_weight="10"
+            android:layout_centerVertical="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginStart="16dp"
+            android:background="@drawable/search_bar"
+            android:fontFamily="@font/nexa_l"
+            android:hint="Type to compose"
+            android:paddingLeft="9dp"
+            android:paddingRight="9dp"
+            android:textSize="17dp" />
+
+        <Button
+            android:layout_width="55dp"
+            android:layout_height="55dp"
+            android:layout_weight="1"
+            android:id="@+id/bt_send"
+            android:background="@mipmap/ic_send_msg"
+            android:layout_centerVertical="true"
+            android:layout_alignParentEnd="true"
+            android:elevation="6dp"
+           />
+
+    </LinearLayout>
+
+
+</RelativeLayout>

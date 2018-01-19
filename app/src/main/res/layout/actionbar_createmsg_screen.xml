@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:id="@+id/msg_bar_layout"
+    android:background="@color/colorPrimary"
+    android:paddingLeft="20dp"
+    android:weightSum="16"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+
+    <EditText
+        android:id="@+id/edtxt_search_bar"
+        style="@style/editTextEntryName"
+        android:layout_width="244dp"
+        android:layout_height="32dp"
+        android:layout_gravity="center"
+        android:layout_weight="13"
+        android:background="@drawable/search_bar"
+        android:fontFamily="@font/nexa_l"
+        android:hint="Recipent"
+        android:maxLength="25"
+        android:paddingLeft="9dp"
+        android:paddingRight="9dp"
+        android:textSize="17dp" />
+
+    <ImageView
+        android:layout_width="25dp"
+        android:layout_height="45dp"
+        android:layout_gravity="center"
+        android:layout_weight="2" />
+
+        <ImageView
+            android:layout_width="55dp"
+            android:layout_height="55dp"
+            android:layout_weight="1"
+            android:layout_gravity="center"
+            android:id="@+id/ic_add_contact"
+            android:background="@mipmap/ic_add_contact"/>
+
+</LinearLayout>

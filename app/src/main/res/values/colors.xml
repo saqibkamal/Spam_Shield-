@@ -4,6 +4,8 @@
     <color name="colorPrimaryDark">#2DBACC</color>
     <color name="color2">#83DFEC</color>
     <color name="color3">#26A79A</color>
-    <color name="trans">#00ffffff</color>
     <color name="colorAccent">#FF4081</color>
+    <color name="trans">#00ffffff</color>
+    <color name="progressbarbg">#7D7F80</color>
+    <color name="progressbarfg">#7DB8B1</color>
 </resources>

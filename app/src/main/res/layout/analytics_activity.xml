@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:circular="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/tools"
+    android:paddingLeft="20dp"
+    android:paddingRight="20dp"
+    android:orientation="vertical"
+    android:gravity="center">
+  
+        
+        <RelativeLayout
+            android:layout_width="106dp"
+            android:layout_height="31dp"
+            android:id="@+id/label1"
+            android:background="@drawable/month_label_graph"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="5dp"
+            >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true"
+                android:textSize="15dp"
+                android:textColor="#fff"
+                android:text="MONTHLY"
+                android:fontFamily="@font/roboto_med"
+                />
+        </RelativeLayout>
+        
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/label1"
+        android:layout_marginTop="5dp"
+        android:weightSum="2"
+        android:orientation="vertical">
+
+        <com.github.mikephil.charting.charts.LineChart
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/label1"
+            android:layout_marginTop="10dp"
+            android:layout_centerHorizontal="true"
+            android:layout_weight="1"
+            android:id="@+id/line_chart">
+        </com.github.mikephil.charting.charts.LineChart>
+
+        <RelativeLayout
+            android:id="@+id/text_insights"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/line_chart"
+            android:layout_weight="1">
+
+            <RelativeLayout
+                android:id="@+id/label2"
+                android:layout_width="250dp"
+                android:layout_height="40dp"
+                android:layout_centerHorizontal="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerVertical="true"
+                    android:fontFamily="@font/roboto_med"
+                    android:text="SHIELD OVERVIEW"
+                    android:textColor="#454D4C"
+                    android:textSize="20dp" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_analytics"
+                android:layout_below="@+id/label2"
+                android:paddingBottom="5dp">
+
+                <RelativeLayout
+                    android:id="@+id/label3"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="15dp"
+                    android:paddingLeft="50dp"
+                    android:paddingRight="50dp">
+
+                    <TextView
+                        android:id="@+id/tv_total_msg_count"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true"
+                        android:fontFamily="@font/nexab"
+                        android:textColor="#000"
+                        android:textSize="28dp" />
+
+
+                    <TextView
+                        android:id="@+id/tv_spam_msg_count"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:fontFamily="@font/nexab"
+                        android:textColor="#000"
+                        android:textSize="28dp" />
+
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:id="@+id/label4"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/label3"
+                    android:paddingLeft="40dp"
+                    android:paddingRight="40dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentStart="true"
+                        android:layout_alignParentTop="true"
+                        android:fontFamily="@font/nexab"
+                        android:text="Total messages"
+                        android:textColor="#2E4A18"
+                        android:textSize="15dp" />
+
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_alignParentTop="true"
+                        android:fontFamily="@font/nexab"
+                        android:text="Spam messages"
+                        android:textColor="#E52929"
+                        android:textSize="15dp" />
+
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:id="@+id/filter"
+                    android:layout_width="130dp"
+                    android:layout_height="130dp"
+                    android:layout_alignEnd="@+id/textView"
+                    android:layout_alignParentBottom="true"
+                    android:layout_marginEnd="16dp"
+                    android:background="@color/trans">
+
+                    <com.mikhaellopez.circularprogressbar.CircularProgressBar
+                        android:id="@+id/filter_circle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:cpb_background_progressbar_color="@color/progressbarbg"
+                        app:cpb_background_progressbar_width="2dp"
+                        app:cpb_progressbar_color="@color/progressbarfg"
+                        app:cpb_progressbar_width="5dp" />
+
+                    <TextView
+                        android:id="@+id/accuracy"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerVertical="true"
+                        android:layout_centerInParent="true"
+                        android:fontFamily="@font/nexab"
+                        android:textColor="#000"
+                        android:textSize="30dp" />
+
+
+                </RelativeLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:text="Filter Accuracy"
+                    android:fontFamily="@font/nexab"
+                    android:textColor="#000"
+                    android:textSize="17dp"
+                    android:layout_below="@id/filter"
+                    android:layout_centerHorizontal="true"
+                    android:id="@+id/textView" />
+
+            </RelativeLayout>
+
+        </RelativeLayout>
+
+
+    </LinearLayout>
+    
+</RelativeLayout>

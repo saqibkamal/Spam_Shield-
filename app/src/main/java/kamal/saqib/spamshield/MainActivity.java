@@ -48,6 +48,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import com.activeandroid.ActiveAndroid;
 import com.activeandroid.Model;
+import com.activeandroid.query.Delete;
 import com.activeandroid.query.Select;
 import com.activeandroid.query.Update;
 import com.baoyz.swipemenulistview.SwipeMenu;
@@ -140,6 +141,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });*/
 
+
         final String myPackageName = getPackageName();
         if (!Telephony.Sms.getDefaultSmsPackage(this).equals(myPackageName)) {
             Intent intent =
@@ -175,7 +177,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onClick(View view) {
 
-                Intent in=new Intent(getApplicationContext(),selectcontacts.class);
+                Intent in=new Intent(getApplicationContext(),CreateMessage.class);
                 Bundle args = new Bundle();
                 //args.putSerializable("allmsgs", hmap_for_db);
                 args.putSerializable("allcntcts",contacts_for_db);
@@ -195,6 +197,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         t2.setTypeface(myFont2);
 
         lv = findViewById(R.id.lv_msg);
+
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
+
+        Long t=System.currentTimeMillis();
+        String date=simpleDateFormat.format(new Date(t));
+
+        String currday=date.substring(0,2);
+
+        if(currday.equals("01")){
+            clearcountdb();
+        }
 
 
         alertDialog = new SpotsDialog(this);
@@ -257,11 +270,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
 
+        ImageView analytics = findViewById(R.id.ic_graph);
+        analytics.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(getApplicationContext(),Analytics.class));
+            }
+        });
 
-        
+
+
 
 
     }
+
+    public void clearcountdb(){
+        new Delete().from(msg_countdb.class).executeSingle();
+    }
+
+
 
     private void showActionBar(){
         LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -397,7 +424,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 hfmsgs.add(message.message);
             }
         }
-        lv.setAdapter(new CustomAdapter(this));
+        readfromdatabase();
+        //lv.setAdapter(new CustomAdapter(this));
     }
 
     public void addtocountdb(Message message){
@@ -817,6 +845,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             msgSqldb.save();
                             flag1=1;
 
+                            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
+
+                            Long t=System.currentTimeMillis();
+                            String date=simpleDateFormat.format(new Date(t));
+
+                            String currmnth=date.substring(3,5);
+
+                            if(currmnth.equals(mg.date.substring(3,5))){
+                                addtocountdb(mg);
+                            }
+
                            /* String id=msgSqldb.msg_id;
                             String add=msgSqldb.address;
                             String dt=msgSqldb.date;
@@ -1038,76 +1077,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         inst = this;
     }
 
-   /* public class sendJson extends  AsyncTask<String ,Void,Void>{
-        String msg,id,sender,date,timestamp,result;
 
-        @Override
-        protected Void doInBackground(String... strings) {
-
-            msg=strings[0];
-            id=strings[1];
-            sender=strings[3];
-            date=strings[2];
-            timestamp=strings[4];
-
-
-            HttpClient httpclient;
-            HttpResponse response = null;
-            result = "";
-            try{
-                httpclient = new DefaultHttpClient();
-
-                HttpPost post = new HttpPost("https://spamshield.herokuapp.com/predict");
-
-                JSONObject json = new JSONObject();
-                json.put("messagejson", msg);
-                StringEntity se;
-                se = new StringEntity(json.toString());
-                post.setEntity(se);
-
-                post.setHeader("Content-type", "application/json");
-                response = httpclient.execute(post);
-                Log.i("msgr","result");
-
-            } catch (Exception e){
-                result = "error1";
-            }
-
-            try{
-                BufferedReader rd = new BufferedReader(new InputStreamReader(
-                        response.getEntity().getContent()));
-                String line="";
-                while((line = rd.readLine()) != null){
-                    result = result + line;
-                }
-                Log.i("msgr",result);
-            } catch(Exception e){
-                result = "error2";
-            }
-
-            Log.i("msgr",result);
-            return null;
-
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            Log.i("Completeted","Chk ");
-            String ans;
-            if(result.contains("spam")){
-                ans="spam";
-            }
-            else
-                ans="ham";
-            Log.i("Result", String.valueOf(date.length()));
-            Message mesg=new Message(id,sender,date,"1",msg,timestamp,ans);
-            addnewmsgtodb(mesg);
-
-        }
-
-
-    }
-*/
     public class sendOldMessage extends AsyncTask<String,Void,Void>{
 
         @Override
@@ -1180,32 +1150,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.navigation_items, menu);
-        return true;
-
-    }
-
-    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
-        int id = item.getItemId();
-
-        if(id == R.id.blocked){
-
-            Toast.makeText(getApplicationContext(), "yolo", Toast.LENGTH_SHORT).show();
-
-        } else if (id==R.id.settings){
-            Intent i = new Intent(this, MyPreferencesActivity.class);
-            startActivity(i);
-
-
+        if(toggle.onOptionsItemSelected(item)){
+            return true;
         }
-//        else if (id==android.R.id.home){
-//
-//            finish();
-//
-//        }
         return super.onOptionsItemSelected(item);
     }
 

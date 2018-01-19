@@ -121,6 +121,9 @@
         </service>
 
         <activity android:name=".selectcontacts" />
+        <activity android:name=".Analytics"/>
+        <activity android:name=".CreateMessage"
+            android:windowSoftInputMode="stateVisible|adjustResize"/>
         <activity android:name=".Spam_msgs"></activity>
     </application>
 

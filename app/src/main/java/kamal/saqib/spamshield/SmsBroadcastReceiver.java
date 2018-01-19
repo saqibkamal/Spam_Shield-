@@ -102,7 +102,7 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
 
     public void Notification(Context context, Message mg) {
         // Set Notification Title
-        String strtitle = context.getString(R.string.notificationtitle);
+        String strtitle = "New Message";
 
         // Open NotificationView Class on Notification Click
         Intent intent = new Intent(context, NotificationView.class);

@@ -42,13 +42,6 @@ public class send_msg extends Activity implements OnClickListener {
 
         send.setOnClickListener(this);
         getcontact.setOnClickListener(this);
-
-
-
-
-
-
-
     }
 
     @Override
