@@ -258,14 +258,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
 
 
-        //yei ho sharedpref code
-        PreferenceManager.setDefaultValues(this, R.xml.pref, false);
-
-        SharedPreferences appPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-        Boolean currentNotifSetting = appPrefs.getBoolean("notif", true);
-        String currentNotif = currentNotifSetting.toString();
-
-        Toast.makeText(getApplicationContext(), currentNotif, Toast.LENGTH_SHORT).show();
+        
 
 
     }

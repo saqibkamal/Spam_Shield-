@@ -43,7 +43,7 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
 
     SharedPreferences sharedpreferences;
     SharedPreferences.Editor editor;
-    Context context;
+    Context ctx;
 
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -54,8 +54,9 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
         String smsBody="",address="",dateFromSms="",id="";
         Long date=0L;
         int x=0;
+        ctx=context;
 
-        //context=
+
 
         sharedpreferences = context.getSharedPreferences("Mydata", Context.MODE_PRIVATE);
         editor=sharedpreferences.edit();
@@ -86,7 +87,6 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
 
             Log.i("NEW ","JSON CREATED");
             smsBody=smsBody.trim();
-            Notification(context, smsBody);
             sendJson json=new sendJson();
             json.execute(smsBody,String.valueOf(x),dateFromSms,address,date.toString());
 
@@ -99,14 +99,15 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
 
     }
 
-    public void Notification(Context context, String message) {
+    public void Notification(Context context, Message mg) {
         // Set Notification Title
         String strtitle = context.getString(R.string.notificationtitle);
+
         // Open NotificationView Class on Notification Click
         Intent intent = new Intent(context, NotificationView.class);
         // Send data to NotificationView Class
-        intent.putExtra("title", strtitle);
-        intent.putExtra("text", message);
+        intent.putExtra("title", mg.sender_address);
+        intent.putExtra("text", mg.message);
         // Open NotificationView.java Activity
         PendingIntent pIntent = PendingIntent.getActivity(context, 0, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT);
@@ -117,11 +118,11 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
                 // Set Icon
                 .setSmallIcon(R.drawable.ic_message)
                 // Set Ticker Message
-                .setTicker(message)
+                .setTicker(mg.message)
                 // Set Title
-                .setContentTitle(context.getString(R.string.notificationtitle))
+                .setContentTitle(mg.sender_address)
                 // Set Text
-                .setContentText(message)
+                .setContentText(mg.message)
                 // Add an Action Button below Notification
                 .addAction(R.drawable.bow_icon, "Action Button", pIntent)
                 // Set PendingIntent into Notification
@@ -141,10 +142,14 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
         msg_sqldb msg_db = new msg_sqldb(mg.id,mg.sender_address,mg.date,mg.time,mg.type,mg.message,mg.timestamp,mg.spam);
         msg_db.save();
         Log.i("NEW ","msg received");
+        updatecountdb(mg);
         MainActivity inst = MainActivity.instance();
-        if(inst!=null  ){
-            inst.shownotification(mg);
-            inst.addtocountdb(mg);
+        if(mg.spam.equals("ham"))
+            Notification(ctx,mg);
+        if(inst!=null ){
+
+            //inst.addtocountdb(mg);
+            inst.setcount();
             inst.updateInbox(mg);
             single_user_msg inst2=single_user_msg.instance();
             if(inst2!=null && inst2.phoneNo.equals(mg.sender_address)){
@@ -152,34 +157,35 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
                 inst2.set();
             }
         }
-        else {
-            String date=mg.date;
-            if((new Select().from(msg_countdb.class).where("date = ?",date).execute()).size()==0){
-                msg_countdb msgCountdb =new msg_countdb(date,1,mg.spam.equals("spam")?1:0);
-                msgCountdb.save();
-                Log.i("Update on old","Successful");
+
+    }
+    public void updatecountdb(Message mg){
+        String date=mg.date;
+        if((new Select().from(msg_countdb.class).where("date = ?",date).execute()).size()==0){
+            msg_countdb msgCountdb =new msg_countdb(date,1,mg.spam.equals("spam")?1:0);
+            msgCountdb.save();
+            Log.i("Update on old","Successful");
+        }
+        else{
+            List<msg_countdb> msgCountdb=  new Select().from(msg_countdb.class).where("date = ?",date).execute();
+            int x=0;
+            int tot=msgCountdb.get(0).totalmsg;
+            int spa=msgCountdb.get(0).spammsg;
+            if(mg.spam.equals("spam")) {
+                spa++;
             }
-            else{
-                List<msg_countdb> msgCountdb=  new Select().from(msg_countdb.class).where("date = ?",date).execute();
-                int x=0;
-                int tot=msgCountdb.get(0).totalmsg;
-                int spa=msgCountdb.get(0).spammsg;
-                if(mg.spam.equals("spam")) {
-                    spa++;
-                }
 
-                new Update(msg_countdb.class)
-                        .set("totalmsg = ?", tot+1)
-                        .where("date = ?", date)
-                        .execute();
+            new Update(msg_countdb.class)
+                    .set("totalmsg = ?", tot+1)
+                    .where("date = ?", date)
+                    .execute();
 
-                new Update(msg_countdb.class)
-                        .set("spammsg = ?",spa)
-                        .where("date = ?", date)
-                        .execute();
+            new Update(msg_countdb.class)
+                    .set("spammsg = ?",spa)
+                    .where("date = ?", date)
+                    .execute();
 
-                Log.i("Update","Successful");
-            }
+            Log.i("Update in count db","Successful");
         }
     }
 
