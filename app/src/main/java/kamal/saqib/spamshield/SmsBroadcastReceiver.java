@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -128,7 +129,8 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
                 // Set PendingIntent into Notification
                 .setContentIntent(pIntent)
                 // Dismiss Notification
-                .setAutoCancel(true);
+                .setAutoCancel(true)
+                .setSound(Uri.parse("android.resource://" + "kamal.saqib.spamshield" + "/" + R.raw.notification));
 
         // Create Notification Manager
         NotificationManager notificationmanager = (NotificationManager) context
