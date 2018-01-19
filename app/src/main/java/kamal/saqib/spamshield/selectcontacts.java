@@ -15,6 +15,9 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.activeandroid.ActiveAndroid;
+import com.activeandroid.query.Select;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -37,10 +40,27 @@ public class selectcontacts extends AppCompatActivity {
         setContentView(R.layout.activity_selectcontacts);
         lv=findViewById(R.id.listview);
 
-        Intent intent = getIntent();
-        Bundle args = intent.getBundleExtra("BUNDLE");
-        //all_msgs = (HashMap<String, ArrayList<Message>>) args.getSerializable("allmsgs");
-        contacts=(HashMap<String,String>) args.getSerializable("allcntcts");
+        contacts=new HashMap<>();
+
+
+
+
+
+
+        ActiveAndroid.beginTransaction();
+        try{
+            List<cntcts_sqldb> cntctsSqldbs = new Select("*")
+                    .from(cntcts_sqldb.class)
+                    .execute();
+            for(cntcts_sqldb ct:cntctsSqldbs){
+                contacts.put(ct.number,ct.name);
+
+            }
+            ActiveAndroid.setTransactionSuccessful();
+        }
+        finally {
+            ActiveAndroid.endTransaction();
+        }
 
 
 
@@ -120,8 +140,10 @@ public class selectcontacts extends AppCompatActivity {
                     Bundle args = new Bundle();
                     args.putSerializable("ARRAYLIST", new ArrayList<Message>());
                     args.putSerializable("phonenumber",allnames.get(position).e);
+                    args.putSerializable("name",allnames.get(position).l);
                     in.putExtra("BUNDLE", args);
                     startActivity(in);
+                    finish();
 
                 }
             });

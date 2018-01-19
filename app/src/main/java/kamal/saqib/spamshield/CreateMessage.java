@@ -1,9 +1,12 @@
 package kamal.saqib.spamshield;
 
 import android.content.Context;
+import android.content.Intent;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -11,6 +14,8 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+
+import java.util.ArrayList;
 
 public class CreateMessage extends AppCompatActivity {
 
@@ -32,9 +37,12 @@ public class CreateMessage extends AppCompatActivity {
         addContact.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                startActivity(new Intent(getApplicationContext(),selectcontacts.class));
+                finish();
 
             }
         });
+
 
     }
 
@@ -49,6 +57,31 @@ public class CreateMessage extends AppCompatActivity {
         bar.setDisplayShowCustomEnabled(true);
         bar.setDisplayShowTitleEnabled(false);
         bar.setCustomView(v);
+
+
+        final EditText editText=findViewById(R.id.edtxt_search_bar);
+
+        editText.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View view, int i, KeyEvent keyEvent) {
+
+                if (i == KeyEvent.KEYCODE_ENTER) {
+
+                    String num=editText.getText().toString();
+                    Intent in = new Intent(getBaseContext(), single_user_msg.class);
+                    Bundle args = new Bundle();
+                    args.putSerializable("ARRAYLIST", new ArrayList<Message>());
+                    args.putSerializable("phonenumber",num);
+                    args.putSerializable("name",null);
+                    in.putExtra("BUNDLE", args);
+                    startActivity(in);
+                    finish();
+
+                    return true;
+                }
+                return false;
+            }
+        });
     }
     ////////
     @Override

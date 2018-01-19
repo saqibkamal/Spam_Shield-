@@ -60,7 +60,8 @@
                 <data android:scheme="mmsto" />
             </intent-filter>
         </activity>
-        <activity android:name=".single_user_msg">
+        <activity android:name=".single_user_msg"
+            android:windowSoftInputMode="stateVisible|adjustResize">
             <intent-filter android:priority="999">
                 <action android:name="android.intent.action.SEND" />
                 <action android:name="android.intent.action.SENDTO" />

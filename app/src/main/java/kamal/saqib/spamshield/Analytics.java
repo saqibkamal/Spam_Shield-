@@ -39,7 +39,7 @@ public class Analytics extends AppCompatActivity {
     private TextView tv3;
     ArrayList<Integer> msgcount;
     int totalmsg,spammsg;
-    float accuracy;
+    int accuracy;
 
     String mnth[]={"","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sept","Oct","Nov","Dec"};
 
@@ -64,7 +64,7 @@ public class Analytics extends AppCompatActivity {
 
         msgcount=new ArrayList<>(31);
        // Log.i("Array size",String.valueOf(msgcount.size()));
-        for(int i=0;i<31;i++)
+        for(int i=0;i<=31;i++)
             msgcount.add(0);
 
         totalmsg=0;
@@ -106,16 +106,17 @@ public class Analytics extends AppCompatActivity {
 
         }
 
-
-
         /*mChart.getAxisRight().setEnabled(false);
         XAxis xAxis = mChart.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);*/
+        YAxis  yAxis=new YAxis();
+        yAxis.setAxisMinimum(0);
 
-        ArrayList<Entry> yValues=new ArrayList<>(31);
 
-        for(int i=0;i<31;i++){
-            yValues.add(new Entry(i,msgcount.get(i).floatValue()));
+        ArrayList<Entry> yValues=new ArrayList<>(32);
+
+        for(int i=1;i<=31;i++){
+            yValues.add(new Entry(i,msgcount.get(i)));
         }
 
         accuracy=(spammsg*100)/totalmsg;
@@ -166,7 +167,7 @@ public class Analytics extends AppCompatActivity {
         LineData data = new LineData(dataSets);
         mChart.setData(data);
         mChart.setVisibleXRangeMaximum(6);
-        mChart.moveViewToX(3);
+        mChart.moveViewToX(1);
 
 
         showTextAnimation();

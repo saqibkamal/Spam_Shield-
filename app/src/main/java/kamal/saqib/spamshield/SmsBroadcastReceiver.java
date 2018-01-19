@@ -76,13 +76,9 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
                 dateFromSms = simpleDateFormat.format(new Date(date));
                 id=smsMessage.getDisplayMessageBody();
 
-                Log.i("msg_detail",smsBody+" "+address+" "+date.toString());
-
-
                 Random random =new Random();
                 x=random.nextInt()+100000000;
                 Log.i("x",String.valueOf(x));
-              // message=new Message(String.valueOf(x),address,dateFromSms,"1",smsBody,date.toString(),"ham");
 
             }
 
@@ -91,14 +87,11 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
             sendJson json=new sendJson();
             json.execute(smsBody,String.valueOf(x),dateFromSms,address,date.toString());
 
-
-           // MainActivity inst = MainActivity.instance();
-            //inst.gotnewmessage(String.valueOf(x),address,dateFromSms,smsBody,date.toString());
-
-
         }
 
     }
+
+
 
     public void Notification(Context context, Message mg) {
         // Set Notification Title

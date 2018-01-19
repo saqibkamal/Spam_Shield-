@@ -54,6 +54,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_below="@+id/line_chart"
+            android:paddingBottom="7dp"
             android:layout_weight="1">
 
             <RelativeLayout
@@ -76,7 +77,7 @@
 
             <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:background="@drawable/bg_analytics"
                 android:layout_below="@+id/label2"
                 android:paddingBottom="5dp">
@@ -147,10 +148,11 @@
                     android:id="@+id/filter"
                     android:layout_width="130dp"
                     android:layout_height="130dp"
-                    android:layout_alignEnd="@+id/textView"
-                    android:layout_alignParentBottom="true"
-                    android:layout_marginEnd="16dp"
-                    android:background="@color/trans">
+                    android:layout_below="@+id/label4"
+                    android:layout_centerHorizontal="true"
+                    android:background="@color/trans"
+                    android:layout_marginTop="10dp"
+                    >
 
                     <com.mikhaellopez.circularprogressbar.CircularProgressBar
                         android:id="@+id/filter_circle"
@@ -162,15 +164,15 @@
                         app:cpb_progressbar_width="5dp" />
 
                     <TextView
-                        android:id="@+id/accuracy"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:id="@+id/accuracy"
                         android:layout_centerVertical="true"
-                        android:layout_centerInParent="true"
+                        android:layout_centerHorizontal="true"
                         android:fontFamily="@font/nexab"
                         android:textColor="#000"
-                        android:textSize="30dp" />
-
+                        android:layout_marginLeft="30dp"
+                        android:textSize="35dp"/>
 
                 </RelativeLayout>
 
@@ -184,7 +186,7 @@
                     android:textSize="17dp"
                     android:layout_below="@id/filter"
                     android:layout_centerHorizontal="true"
-                    android:id="@+id/textView" />
+                    />
 
             </RelativeLayout>
 

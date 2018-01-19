@@ -6,6 +6,8 @@
     android:layout_height="match_parent"
     tools:context="kamal.saqib.spamshield.single_user_msg">
 
+
+
     <ListView
         android:id="@+id/list"
         android:layout_width="match_parent"
@@ -14,21 +16,61 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
         android:divider="@null"
-        android:dividerHeight="0dp"/>
-    <EditText
-        android:layout_width="340dp"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/list"
-        android:layout_marginTop="10dp"
-        android:id="@+id/msg_box" />
-    <ImageView
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:layout_below="@+id/list"
-        android:layout_marginLeft="13dp"
-        android:layout_marginStart="13dp"
-        android:layout_toEndOf="@+id/msg_box"
-        android:layout_toRightOf="@+id/msg_box"
+        android:dividerHeight="0dp"
+        android:stackFromBottom="true"
+        android:layout_above="@+id/msg_bar_layout"
+        android:transcriptMode="alwaysScroll"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
+        android:id="@+id/msg_bar_layout"
+        android:background="@drawable/msg_bar"
+        android:layout_alignParentBottom="true"
+        android:weightSum="12"
+        android:paddingRight="2dp"
+        android:paddingLeft="12dp"
+        android:gravity="center"
+        >
+        <RelativeLayout
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:background="@drawable/add_emo_circle"
+            android:layout_centerVertical="true"
+            android:layout_weight="1"
+            android:gravity="center">
+            <ImageView
+                android:layout_width="25dp"
+                android:layout_height="25dp"
+                android:id="@+id/imgv_emo"
+                android:background="@mipmap/ic_add_emo"
+                />
+        </RelativeLayout>
 
-        android:id="@+id/send"/>
+        <EditText
+            android:id="@+id/edtxt_msg_bar"
+            android:layout_width="287dp"
+            android:layout_height="40dp"
+            android:layout_weight="10"
+            android:layout_centerVertical="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginStart="16dp"
+            android:background="@drawable/search_bar"
+            android:fontFamily="@font/nexa_l"
+            android:hint="Type to compose"
+            android:paddingLeft="9dp"
+            android:paddingRight="9dp"
+            android:textSize="17dp" />
+
+        <Button
+            android:layout_width="55dp"
+            android:layout_height="55dp"
+            android:layout_weight="1"
+            android:id="@+id/bt_send"
+            android:background="@mipmap/ic_send_msg"
+            android:layout_centerVertical="true"
+            android:layout_alignParentEnd="true"
+            android:elevation="6dp"
+            />
+
+    </LinearLayout>
 </RelativeLayout>

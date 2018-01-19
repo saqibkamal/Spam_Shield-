@@ -178,10 +178,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onClick(View view) {
 
                 Intent in=new Intent(getApplicationContext(),CreateMessage.class);
-                Bundle args = new Bundle();
-                //args.putSerializable("allmsgs", hmap_for_db);
-                args.putSerializable("allcntcts",contacts_for_db);
-                in.putExtra("BUNDLE", args);
+
 
                 //viewMenu();
                 startActivity(in);
@@ -977,13 +974,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         public class Holder {
             TextView tv, fmsg;
             ImageView img;
+            String name=null;
 
         }
 
         @Override
         public View getView(final int position, View convertView, ViewGroup parent) {
 
-            kamal.saqib.spamshield.MainActivity.CustomAdapter.Holder holder = new kamal.saqib.spamshield.MainActivity.CustomAdapter.Holder();
+            final kamal.saqib.spamshield.MainActivity.CustomAdapter.Holder holder = new kamal.saqib.spamshield.MainActivity.CustomAdapter.Holder();
             View rowView;
             rowView = inflater.inflate(R.layout.front_page_listview, null);
 
@@ -998,7 +996,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             String ph_no = result.get(position);
             if (contacts_for_db.containsKey(ph_no))
-                holder.tv.setText(contacts_for_db.get(ph_no));
+                holder.name=contacts_for_db.get(ph_no);
+
+
+            if(holder.name!=null)
+                holder.tv.setText(holder.name);
 
 
            /*final SwipeMenuCreator creator;
@@ -1056,6 +1058,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Bundle args = new Bundle();
                     args.putSerializable("ARRAYLIST", hmap_for_db.get(p));
                     args.putSerializable("phonenumber",hmap_for_db.get(p).get(0).sender_address);
+                    args.putSerializable("name", holder.name);
                     in.putExtra("BUNDLE", args);
                     startActivity(in);
 

@@ -1,5 +1,6 @@
 package kamal.saqib.spamshield;
 
+import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
@@ -8,20 +9,27 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.telephony.SmsManager;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.activeandroid.query.Delete;
@@ -30,6 +38,7 @@ import com.ahmadrosid.lib.MessageView;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Random;
 
@@ -40,9 +49,9 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
     ListView messages;
     ArrayAdapter arrayAdapter;
     EditText msg_box;
-    ImageView sendButton;
+    Button sendButton;
     ArrayList<Message> msgs;
-    String phoneNo;
+    String phoneNo,name;
     SimpleDateFormat simpleDateFormat;
     final CharSequence options[] = new CharSequence[]{"Delete"};
     ProgressDialog progressDialog;
@@ -57,8 +66,8 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
 
         messages = (ListView) findViewById(R.id.list);
 
-        msg_box=(EditText) findViewById(R.id.msg_box);
-        sendButton=(ImageView) findViewById(R.id.send);
+        msg_box=(EditText) findViewById(R.id.edtxt_msg_bar);
+        sendButton= findViewById(R.id.bt_send);
         simpleDateFormat=new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
        // arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, smsMessagesList);
       //  messages.setAdapter(arrayAdapter);
@@ -67,12 +76,19 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
         Bundle args = intent.getBundleExtra("BUNDLE");
        msgs = (ArrayList<Message>) args.getSerializable("ARRAYLIST");
        phoneNo=(String) args.getSerializable("phonenumber");
+       name=(String) args.getSerializable("name");
+
+       Log.i("name+phone",name + phoneNo);
+
        // for(int i=0;i<msgs.size();i++) {
 //            arrayAdapter.add(msgs.get(i).message+msgs.get(i).spam+msgs.get(i).type);
             //phoneNo = msgs.get(i).sender_address;
         //}
         sendButton.setOnClickListener(this);
+        Collections.reverse(msgs);
         set();
+
+        showActionBar();
 
     }
 
@@ -85,6 +101,37 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
                 sendSMS(msg);
             }
         }
+    }
+
+    private void showActionBar(){
+        LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View v = inflater.inflate(R.layout.actionbar_analytics,null);
+        final ActionBar bar = getSupportActionBar();
+
+        //to set name of the action at the middle
+        ActionBar.LayoutParams params = new ActionBar.LayoutParams(
+                ActionBar.LayoutParams.WRAP_CONTENT,
+                ActionBar.LayoutParams.MATCH_PARENT,
+                Gravity.CENTER);
+        TextView textviewTitle = (TextView) v.findViewById(R.id.tv_title);
+        textviewTitle.setText(name==null?phoneNo:name);
+        ///////
+        bar.setHomeButtonEnabled(true);
+        bar.setDisplayHomeAsUpEnabled(true);
+        bar.setDisplayShowHomeEnabled(false);
+        bar.setDisplayShowCustomEnabled(true);
+        bar.setDisplayShowTitleEnabled(false);
+        bar.setCustomView(v, params);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()){
+            case android.R.id.home:
+                onBackPressed();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void sendSMS(final String message) {
@@ -111,8 +158,6 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
                         //arrayAdapter.insert(message,0);
 
                         msg_box.setText("");
-
-
                         Long tsLong = System.currentTimeMillis();
                         String ts = tsLong.toString();
                         String dateFromSms = simpleDateFormat.format(new Date(tsLong));
@@ -120,12 +165,19 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
                         int x=random.nextInt()+100000000;
                         Log.i("xyz",String.valueOf(x));
                         Message mess=new Message(String.valueOf(x),phoneNo,dateFromSms,"2",message,ts,"ham");
-                        msgs.add(0,mess);
+                        msgs.add(msgs.size(),mess);
+
+
+                        msg_sqldb msgSqldb=new msg_sqldb(mess.id,mess.sender_address,mess.date,mess.time,mess.type,mess.message,mess.timestamp,mess.spam);
+                        msgSqldb.save();
                         MainActivity inst = MainActivity.instance();
-                        inst.addsendsmstodb(mess);
+                        inst.updateInbox(mess);
+                        set();
 
                         Toast.makeText(getApplicationContext(), "SMS Sent!",
                                 Toast.LENGTH_LONG).show();
+
+                        unregisterReceiver(this);
 
 
                         break;
@@ -148,6 +200,8 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
                 }
             }
         }, new IntentFilter(SENT));
+
+
 
 
         try {
@@ -203,7 +257,10 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
         {
             MessageView tv;
 
+
+
         }
+        @SuppressLint("ResourceAsColor")
         @Override
         public View getView(final int position, View convertView, ViewGroup parent) {
             // TODO Auto-generated method stub
@@ -216,11 +273,14 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
                 holder.tv.setLeft();
                 holder.tv.setTitleMessages(msgs.get(position).date);
                 holder.tv.setDecsMessages(msgs.get(position).message);
+                holder.tv.setBackgroundColor(R.color.black);
             }
             else{
                 holder.tv.setRight();
                 holder.tv.setTitleMessages(msgs.get(position).date);
                 holder.tv.setDecsMessages(msgs.get(position).message);
+                holder.tv.setBackgroundColor(R.color.grey_50);
+
             }
             //holder.img.setImageResource(imageId[position]);
 
@@ -264,11 +324,10 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
                     builder.show();
 
 
-                   // deleteSMS(msgs.get(position).message,phoneNo,msgs.get(position).timestamp);
+                    // deleteSMS(msgs.get(position).message,phoneNo,msgs.get(position).timestamp);
                     return true;
                 }
             });
-
 
 
             return rowView;
@@ -356,6 +415,8 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
     public static single_user_msg instance() {
         return inst;
     }
+
+
 
 
 }
