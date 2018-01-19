@@ -1,5 +1,7 @@
 package kamal.saqib.spamshield;
 
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -7,6 +9,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.RequiresApi;
+import android.support.v4.app.NotificationCompat;
 import android.telephony.SmsMessage;
 import android.util.Log;
 
@@ -72,6 +75,7 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
 
             Log.i("NEW ","JSON CREATED");
             smsBody=smsBody.trim();
+            Notification(context, smsBody);
             sendJson json=new sendJson();
             json.execute(smsBody,String.valueOf(x),dateFromSms,address,date.toString());
 
@@ -83,6 +87,45 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
         }
 
     }
+
+    public void Notification(Context context, String message) {
+        // Set Notification Title
+        String strtitle = context.getString(R.string.notificationtitle);
+        // Open NotificationView Class on Notification Click
+        Intent intent = new Intent(context, NotificationView.class);
+        // Send data to NotificationView Class
+        intent.putExtra("title", strtitle);
+        intent.putExtra("text", message);
+        // Open NotificationView.java Activity
+        PendingIntent pIntent = PendingIntent.getActivity(context, 0, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+
+        // Create Notification using NotificationCompat.Builder
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(
+                context)
+                // Set Icon
+                .setSmallIcon(R.drawable.ic_message)
+                // Set Ticker Message
+                .setTicker(message)
+                // Set Title
+                .setContentTitle(context.getString(R.string.notificationtitle))
+                // Set Text
+                .setContentText(message)
+                // Add an Action Button below Notification
+                .addAction(R.drawable.bow_icon, "Action Button", pIntent)
+                // Set PendingIntent into Notification
+                .setContentIntent(pIntent)
+                // Dismiss Notification
+                .setAutoCancel(true);
+
+        // Create Notification Manager
+        NotificationManager notificationmanager = (NotificationManager) context
+                .getSystemService(Context.NOTIFICATION_SERVICE);
+        // Build Notification with Notification Manager
+        notificationmanager.notify(0, builder.build());
+
+    }
+
     public void nextphase(Message mg){
         msg_sqldb msg_db = new msg_sqldb(mg.id,mg.sender_address,mg.date,mg.time,mg.type,mg.message,mg.timestamp,mg.spam);
         msg_db.save();
