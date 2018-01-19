@@ -94,6 +94,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     ListView lv;
     AlertDialog alertDialog;
+    Button button;
 
     HashMap<String,ArrayList<Message>> map_for_asyntask,smap_for_db,hmap_for_db;
     ArrayList<String> msgids_for_asynctask,smsgsndrs,sfmsgs,hfmsgs,hmsgsndrs;
@@ -115,6 +116,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         toggle = new android.support.v7.app.ActionBarDrawerToggle(this,mDrawer,R.string.open,R.string.close);
         mDrawer.addDrawerListener(toggle);
         toggle.syncState();
+
+        button=findViewById(R.id.button);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(getApplicationContext(),Spam_msgs.class));
+            }
+        });
 
         /*ImageView searchImage = findViewById(R.id.img_search_icon);
         searchImage.setOnClickListener(new View.OnClickListener() {
@@ -245,6 +254,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         hmsgsndrs=new ArrayList<>();
         sfmsgs=new ArrayList<>();
         hfmsgs=new ArrayList<>();
+        s_fmsg=new HashMap<>();
+        h_fmsg=new HashMap<>();
 
         ActiveAndroid.beginTransaction();
         try {
@@ -267,9 +278,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Log.i("spam",msgSqldb.message);
                     if(smsgsndrs.contains(msg_sender)){
 
-                        //smap_for_db.get(msg_sender).add(new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp),sp));
+                        smap_for_db.get(msg_sender).add(new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp),sp));
                         //s_fmsg.remove(add);
-                        s_fmsg.put(add,new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp),sp));
+                        //s_fmsg.put(add,new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp),sp));
                     }
                     else{
                         smsgsndrs.add(msg_sender);

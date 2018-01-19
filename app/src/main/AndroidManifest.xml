@@ -120,7 +120,8 @@
             </intent-filter>
         </service>
 
-        <activity android:name=".selectcontacts"></activity>
+        <activity android:name=".selectcontacts" />
+        <activity android:name=".Spam_msgs"></activity>
     </application>
 
 </manifest>
