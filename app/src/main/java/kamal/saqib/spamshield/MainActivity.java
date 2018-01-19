@@ -8,6 +8,7 @@ import android.app.NotificationManager;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
@@ -103,6 +104,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     HashMap<String,String> contacts_for_db,contacts_for_asynctask;
     private static MainActivity inst;
 
+    SharedPreferences sharedpreferences;
+    SharedPreferences.Editor editor;
+
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -144,6 +148,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         else {
             Toast.makeText(getApplicationContext(),"Default Messaging App",Toast.LENGTH_LONG).show();
         }
+
+
+
+
+        sharedpreferences = getSharedPreferences("Mydata", Context.MODE_PRIVATE);
+        editor=sharedpreferences.edit();
+
+        if (!Telephony.Sms.getDefaultSmsPackage(this).equals(myPackageName)) {
+            editor.putString("firsttime",null);
+            editor.commit();
+
+        }
+
 
 
         layoutMain=findViewById(R.id.layoutMain);
@@ -194,8 +211,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         GetContact getContact = new GetContact();
         getContact.execute();
 
-        GetAllMessages getAllMessages = new GetAllMessages();
-        getAllMessages.execute();
+        String x=sharedpreferences.getString("firsttime",null);
+       // Log.i("VALUE OF X IS ",x);
+        if(x==null){
+            editor.putString("firsttime","no");
+            editor.commit();
+            Log.i("First","time");
+            GetAllMessages getAllMessages = new GetAllMessages();
+            getAllMessages.execute();
+            editor.remove("spamonoff");
+            editor.commit();
+            editor.putString("spamonoff","off");
+            editor.commit();
+        }
+
 
         simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
 
@@ -203,13 +232,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         readfromdatabase();
 
         SwipeButton enableButton = findViewById(R.id.swipe_btn);
+
+
         enableButton.setOnStateChangeListener(new OnStateChangeListener() {
             @Override
             public void onStateChange(boolean active) {
-                if(active==true)
-                    Toast.makeText(MainActivity.this,"Spam shield is off!", Toast.LENGTH_SHORT).show();
-                else
-                    Toast.makeText(MainActivity.this,"Spam shield is on!", Toast.LENGTH_SHORT).show();
+                if(active==true) {
+                    Toast.makeText(MainActivity.this, "Spam shield is on!", Toast.LENGTH_SHORT).show();
+                    editor.remove("spamonoff");
+                    editor.commit();
+                    editor.putString("spamonoff","on");
+                    editor.commit();
+                }
+                else {
+                    Toast.makeText(MainActivity.this, "Spam shield is off!", Toast.LENGTH_SHORT).show();
+                    editor.remove("spamonoff");
+                    editor.commit();
+                    editor.putString("spamonoff","off");
+                    editor.commit();
+                }
             }
         });
 
