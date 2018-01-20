@@ -20,6 +20,7 @@
         android:background="@drawable/search_bar"
         android:fontFamily="@font/nexa_l"
         android:hint="Recipent"
+        android:inputType="number"
         android:maxLength="25"
         android:paddingLeft="9dp"
         android:paddingRight="9dp"

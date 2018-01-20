@@ -46,6 +46,8 @@
                 />
         </RelativeLayout>
 
+
+
         <EditText
             android:id="@+id/edtxt_msg_bar"
             android:layout_width="287dp"
