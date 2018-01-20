@@ -83,6 +83,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final int READ_CONTACTS_PERMISSIONS_REQUEST = 3;
     private static final int READ_EXTERNAL_STORAGE_PERMISSION_REQUEST = 4;
     private static final int WRITE_EXTERNAL_STORAGE_PERMISSION_REQUEST = 5;
+    private static final int WRITE_CONTACTS_PERMISSIONS_REQUEST = 6;
+
 
     private FloatingActionButton fab;
     private RelativeLayout layoutMain;
@@ -119,7 +121,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mDrawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        button=findViewById(R.id.button);
+        //button=findViewById(R.id.button);
 
         getAllPermission();
 
