@@ -51,12 +51,14 @@ import com.activeandroid.Model;
 import com.activeandroid.query.Delete;
 import com.activeandroid.query.Select;
 import com.activeandroid.query.Update;
+import com.arlib.floatingsearchview.FloatingSearchView;
 import com.baoyz.swipemenulistview.SwipeMenu;
 import com.baoyz.swipemenulistview.SwipeMenuCreator;
 import com.baoyz.swipemenulistview.SwipeMenuItem;
 import com.baoyz.swipemenulistview.SwipeMenuListView;
 import com.ebanx.swipebtn.OnStateChangeListener;
 import com.ebanx.swipebtn.SwipeButton;
+import com.miguelcatalan.materialsearchview.MaterialSearchView;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -126,6 +128,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         toggle.syncState();
 
         button=findViewById(R.id.button);
+
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -154,7 +157,33 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             Toast.makeText(getApplicationContext(),"Default Messaging App",Toast.LENGTH_LONG).show();
         }
 
+        //Search Bar
+        MaterialSearchView searchView = (MaterialSearchView) findViewById(R.id.search_view);
+        searchView.setOnQueryTextListener(new MaterialSearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                //Do some magic
+                return false;
+            }
 
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                //Do some magic
+                return false;
+            }
+        });
+
+        searchView.setOnSearchViewListener(new MaterialSearchView.SearchViewListener() {
+            @Override
+            public void onSearchViewShown() {
+                //Do some magic
+            }
+
+            @Override
+            public void onSearchViewClosed() {
+                //Do some magic
+            }
+        });
 
 
         sharedpreferences = getSharedPreferences("Mydata", Context.MODE_PRIVATE);
