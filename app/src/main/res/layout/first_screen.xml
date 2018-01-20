@@ -1,15 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v4.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.v4.widget.DrawerLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/drawer_layout"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/layoutMain">
+
+        <RelativeLayout
+            android:id="@+id/small_notice1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:background="@drawable/small_spam_notice"
+            android:paddingLeft="10dp"
+            android:paddingRight="13dp"
+            android:visibility="invisible">
+
+            <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+
+                <ImageView
+                    android:id="@+id/logo"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_centerVertical="true"
+                    android:layout_marginBottom="8dp"
+                    android:background="@mipmap/main_logo" />
+
+                <TextView
+                    android:id="@+id/txt_spam_count_small"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="40dp"
+                    android:fontFamily="@font/nexab"
+                    android:text="412"
+                    android:textColor="#fff"
+                    android:textSize="35dp" />
+
+            </RelativeLayout>
+
+            <com.ebanx.swipebtn.SwipeButton
+                android:layout_centerVertical="true"
+                android:layout_alignParentEnd="true"
+                android:id="@+id/swipe_btn_small"
+                android:layout_width="70dp"
+                android:layout_height="30dp"
+                app:button_background="@drawable/shape_button"
+                app:button_bottom_padding="4dp"
+                app:button_image_disabled="@drawable/ic_lock_open"
+                app:button_image_enabled="@drawable/ic_locked"
+                app:button_left_padding="0dp"
+                app:button_right_padding="0dp"
+                app:button_top_padding="4dp"
+                app:inner_text="OFF"
+                app:inner_text_background="@drawable/lock_path1"
+                app:inner_text_bottom_padding="8dp"
+                app:inner_text_color="#fff"
+                app:inner_text_left_padding="28dp"
+                app:inner_text_size="12dp"
+                app:inner_text_top_padding="8dp"
+
+                />
+        </RelativeLayout>
+
         <RelativeLayout
             android:layout_width="332dp"
             android:layout_height="200dp"
@@ -17,7 +78,7 @@
             android:id="@+id/box"
             android:layout_centerHorizontal="true"
             android:layout_marginLeft="40dp"
-            android:layout_marginTop="25dp">
+            android:layout_marginTop="15dp">
 
             <ImageView
                 android:layout_width="68dp"
@@ -26,7 +87,7 @@
                 android:layout_alignLeft="@+id/txt_msg1"
                 android:layout_alignStart="@+id/txt_msg1"
                 android:layout_marginBottom="8dp"
-                android:background="@drawable/shield_logo" />
+                android:background="@mipmap/main_logo" />
 
             <TextView
                 android:id="@+id/txt_spam_count"
@@ -72,36 +133,34 @@
 
                 />
 
-
-
-
-
         </RelativeLayout>
 
         <FrameLayout
+            android:id="@+id/frmlay"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_below="@+id/box">
+            android:layout_below="@+id/box"
+           >
 
-            <ListView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
+            <com.baoyz.swipemenulistview.SwipeMenuListView
                 android:id="@+id/lv_msg"
-                android:layout_marginTop="15dp">
-            </ListView>
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp">
+
+            </com.baoyz.swipemenulistview.SwipeMenuListView>
 
             <android.support.design.widget.FloatingActionButton
                 android:id="@+id/big_button"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
-                android:layout_marginRight="17dp"
-                android:layout_marginBottom="12dp"
                 android:layout_gravity="bottom|end"
+                android:layout_marginBottom="12dp"
+                android:layout_marginRight="17dp"
+                android:src="@drawable/create"
                 app:backgroundTint="@color/color3"
                 app:elevation="6dp"
-                android:src="@drawable/create"
-                app:pressedTranslationZ="12dp"
-                />
+                app:pressedTranslationZ="12dp" />
 
         </FrameLayout>
 
@@ -111,8 +170,6 @@
         android:layout_height="match_parent"
         app:menu="@menu/navigation_items"
         android:layout_gravity="start"
-        android:id="@+id/navigationview"
-       >
+        >
     </android.support.design.widget.NavigationView>
-
 </android.support.v4.widget.DrawerLayout>

@@ -2,47 +2,50 @@ package kamal.saqib.spamshield;
 
 import android.Manifest;
 import android.animation.Animator;
+import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationManager;
-import android.app.ProgressDialog;
-import android.content.ClipData;
-import android.content.ClipboardManager;
+import android.app.SearchManager;
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.database.MatrixCursor;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.os.Handler;
 import android.provider.ContactsContract;
 import android.provider.Telephony;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.NavigationView;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.CursorAdapter;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.SearchView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewAnimationUtils;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.view.animation.TranslateAnimation;
+import android.widget.AbsListView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
@@ -80,7 +83,7 @@ import dmax.dialog.SpotsDialog;
 import static kamal.saqib.spamshield.R.id.txt_msg1;
 import static kamal.saqib.spamshield.R.id.txt_spam_count;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener,NavigationView.OnNavigationItemSelectedListener{
+public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
     private DrawerLayout mDrawer;
     private  android.support.v7.app.ActionBarDrawerToggle toggle;
@@ -90,14 +93,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final int READ_CONTACTS_PERMISSIONS_REQUEST = 3;
     private static final int READ_EXTERNAL_STORAGE_PERMISSION_REQUEST = 4;
     private static final int WRITE_EXTERNAL_STORAGE_PERMISSION_REQUEST = 5;
+    private static final int WRITE_CONTACTS_PERMISSIONS_REQUEST = 6;
+
 
     private FloatingActionButton fab;
     private RelativeLayout layoutMain;
     private RelativeLayout layoutContent;
     private  boolean isOpen=false;
-    TextView spamcount;
+    TextView spamcount,spamcountsmall;
 
-    final CharSequence options[] = new CharSequence[]{"Delete Thread","Add to blocklist"};
+    private List<String> items;
+
+    private Menu menu;
 
 
     ListView lv;
@@ -107,38 +114,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     HashMap<String,ArrayList<Message>> map_for_asyntask,smap_for_db,hmap_for_db;
     ArrayList<String> msgids_for_asynctask,smsgsndrs,sfmsgs,hfmsgs,hmsgsndrs;
     HashMap<String,Message> s_fmsg,h_fmsg;
-    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
+    SimpleDateFormat simpleDateFormat;
     HashMap<String,String> contacts_for_db,contacts_for_asynctask;
     private static MainActivity inst;
 
+    private Boolean scrollFlag=true;
+
     SharedPreferences sharedpreferences;
     SharedPreferences.Editor editor;
-
-    ProgressDialog progressDialog;
 
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.screen_first);
+        setContentView(R.layout.first_screen);
 
-        //getAllPermission();
-       // getAllPermission();
+
 
         mDrawer = (DrawerLayout)findViewById(R.id.drawer_layout);
         toggle = new android.support.v7.app.ActionBarDrawerToggle(this,mDrawer,R.string.open,R.string.close);
         mDrawer.addDrawerListener(toggle);
         toggle.syncState();
 
+        //button=findViewById(R.id.button);
 
-
-        setNavigationViewListener();
-
-
-
-        //
-
+        getAllPermission();
 
 
 
@@ -166,8 +167,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
 
-        sharedpreferences = getSharedPreferences("Mydata", Context.MODE_PRIVATE);
-        editor=sharedpreferences.edit();
+
+
 
 
 
@@ -175,35 +176,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         layoutMain=findViewById(R.id.layoutMain);
         //layoutContent=findViewById(R.id.layoutContent);
         fab=findViewById(R.id.big_button);
+
+        sharedpreferences = getSharedPreferences("Mydata", Context.MODE_PRIVATE);
+        editor=sharedpreferences.edit();
+
         setcount();
-
-        //Search Bar
-        /*MaterialSearchView searchView = (MaterialSearchView) findViewById(R.id.search_view);
-        searchView.setOnQueryTextListener(new MaterialSearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                //Do some magic
-                return false;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                //Do some magic
-                return false;
-            }
-        });
-
-        searchView.setOnSearchViewListener(new MaterialSearchView.SearchViewListener() {
-            @Override
-            public void onSearchViewShown() {
-                //Do some magic
-            }
-
-            @Override
-            public void onSearchViewClosed() {
-                //Do some magic
-            }
-        });*/
 
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -227,7 +204,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         lv = findViewById(R.id.lv_msg);
 
-
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
 
         Long t=System.currentTimeMillis();
         String date=simpleDateFormat.format(new Date(t));
@@ -239,7 +216,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
 
-
+        alertDialog = new SpotsDialog(this);
+        alertDialog.show();
 
         showActionBar();
 
@@ -252,41 +230,56 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         s_fmsg=new HashMap<>();
         h_fmsg=new HashMap<>();
 
-        alertDialog = new SpotsDialog(this);
-        alertDialog.show();
-
-
         GetContact getContact = new GetContact();
         getContact.execute();
 
         String x=sharedpreferences.getString("firsttime",null);
        // Log.i("VALUE OF X IS ",x);
-        //if(x==null){
-          /*  editor.putString("firsttime","no");
+        if(x==null){
+            editor.putString("firsttime","no");
             editor.commit();
             Log.i("First","time");
-
+            GetAllMessages getAllMessages = new GetAllMessages();
+            getAllMessages.execute();
             editor.remove("spamonoff");
             editor.commit();
             editor.putString("spamonoff","off");
             editor.commit();
-       // }*/
-        GetAllMessages getAllMessages = new GetAllMessages();
-        getAllMessages.execute();
+        }
 
 
 
 
 
-
+        simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
 
         readcontactsfromdatabase();
         readfromdatabase();
 
         SwipeButton enableButton = findViewById(R.id.swipe_btn);
+        SwipeButton small_enable=findViewById(R.id.swipe_btn_small);
 
 
         enableButton.setOnStateChangeListener(new OnStateChangeListener() {
+            @Override
+            public void onStateChange(boolean active) {
+                if(active==true) {
+                    Toast.makeText(MainActivity.this, "Spam shield is on!", Toast.LENGTH_SHORT).show();
+                    editor.remove("spamonoff");
+                    editor.commit();
+                    editor.putString("spamonoff","on");
+                    editor.commit();
+                }
+                else {
+                    Toast.makeText(MainActivity.this, "Spam shield is off!", Toast.LENGTH_SHORT).show();
+                    editor.remove("spamonoff");
+                    editor.commit();
+                    editor.putString("spamonoff","off");
+                    editor.commit();
+                }
+            }
+        });
+        small_enable.setOnStateChangeListener(new OnStateChangeListener() {
             @Override
             public void onStateChange(boolean active) {
                 if(active==true) {
@@ -315,7 +308,69 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
 
 
-      progressDialog = new ProgressDialog(MainActivity.this);
+
+
+
+
+        /////////////////////////////////////////////////////////
+
+        //Your view which you would like to animate
+        final RelativeLayout yourViewToHide = findViewById(R.id.box);
+        final RelativeLayout viewToShow = findViewById(R.id.small_notice1);
+        //The initial height of that view
+        final int initialViewHeight = yourViewToHide.getLayoutParams().height;
+        lv.setOnScrollListener(new AbsListView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(AbsListView view, int scrollState) {
+                switch(scrollState) {
+                    case 2: // SCROLL_STATE_FLING
+                        /*if(!scrollFlag){
+                            yourViewToHide.setVisibility(View.GONE);
+                            viewToShow.setVisibility(View.VISIBLE);}*/
+                        break;
+
+                    case 1: // SCROLL_STATE_TOUCH_SCROLL
+                        //hide button here
+                        if(scrollFlag){
+                            scrollFlag=false;
+                            slideToTop(yourViewToHide);
+
+                            final Handler handler = new Handler();
+                            handler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    slideToBottom(viewToShow);
+                                }
+                            }, 300);
+                            ;}
+                        break;
+
+                    case 0: // SCROLL_STATE_IDLE
+                        //show button here
+                        if (scrollFlag){
+                            yourViewToHide.setVisibility(View.VISIBLE);
+                            viewToShow.setVisibility(View.GONE);}
+                        else {
+                            yourViewToHide.setVisibility(View.GONE);
+                            viewToShow.setVisibility(View.VISIBLE);
+                        }
+                        break;
+
+                    default:
+                        //show button here
+                        yourViewToHide.setVisibility(View.VISIBLE);
+                        break;
+                }
+
+            }
+
+            @Override
+            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+                //Try catch block for NullPointerExceptions
+
+            }
+        });
+
 
 
 
@@ -323,49 +378,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
-    private void setNavigationViewListener() {
-        NavigationView navigationView = (NavigationView) findViewById(R.id.navigationview);
-        navigationView.setNavigationItemSelectedListener(this);
-    }
 
+    public void slideToTop(View view){
+        TranslateAnimation animate = new TranslateAnimation(0,0,0,-view.getHeight());
+        animate.setDuration(200);
+        animate.setFillAfter(false);
+        view.startAnimation(animate);
+        view.setVisibility(View.INVISIBLE);
 
+        FrameLayout frameLayout = findViewById(R.id.frmlay);
+        /*FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) frameLayout.getLayoutParams();
+        params.*/
 
-
-    @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.settings:
-                startActivity(new Intent(getApplicationContext(),SettingsPage.class));
-                return true;
-            case R.id.blocked:
-                startActivity(new Intent(getApplicationContext(),Block_List.class));
-
-                return true;
-            case R.id.spams:
-                startActivity(new Intent(getApplicationContext(),Spam_msgs.class));
-                return true;
-            default:
-                return false;
-
-        }
+        RelativeLayout.LayoutParams params= new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,ViewGroup.LayoutParams.WRAP_CONTENT);
+        params.addRule(RelativeLayout.BELOW, R.id.small_notice1);
+        frameLayout.setLayoutParams(params);
 
     }
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle item selection
 
-        if (toggle.onOptionsItemSelected(item)) {
-            return true;
-        }
-        return true;
+    public void slideToBottom(View view){
+        TranslateAnimation animate = new TranslateAnimation(0,0,0,0);
+        animate.setDuration(700);
+        animate.setFillAfter(true);
+        view.startAnimation(animate);
+        view.setVisibility(View.VISIBLE);
     }
-
-
 
     public void clearcountdb(){
         new Delete().from(msg_countdb.class).executeSingle();
     }
-
 
 
 
@@ -429,7 +470,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 String msg_sender=add;
                 if(sp.equals("spam")){
-                  //  Log.i("spam",msgSqldb.message);
+                    Log.i("spam",msgSqldb.message);
                     if(smsgsndrs.contains(msg_sender)){
 
                         smap_for_db.get(msg_sender).add(new Message(id,add,dt+" "+tm,tp,mm,String.valueOf(tmstmp),sp));
@@ -512,7 +553,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if((new Select().from(msg_countdb.class).where("date = ?",date).execute()).size()==0){
             msg_countdb msgCountdb =new msg_countdb(date,1,message.spam.equals("spam")?1:0);
             msgCountdb.save();
-           // Log.i("Update on old","Successful");
+            Log.i("Update on old","Successful");
 
         }
         else{
@@ -651,8 +692,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void setcount(){
         spamcount=findViewById(R.id.txt_spam_count);
+        spamcountsmall=findViewById(R.id.txt_spam_count_small);
 
-
+        SimpleDateFormat simpleDateFormat=new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
         Long t=System.currentTimeMillis();
         String date=simpleDateFormat.format(new Date(t));
 
@@ -664,11 +706,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if(msgCountdbs==null || msgCountdbs.size()==0){
 
             spamcount.setText("0");
+            spamcountsmall.setText("0");
         }
         else{
 
 
             spamcount.setText(String.valueOf(msgCountdbs.get(0).spammsg));
+            spamcountsmall.setText(String.valueOf(msgCountdbs.get(0).spammsg));
         }
 
 
@@ -688,6 +732,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         getPermissionToSendSMS();
         getPermissionToReadStorage();
         getPermissionToWriteStorage();
+        getPermissionToWriteContacts();
 
     }
 
@@ -754,8 +799,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             )){
                 Toast.makeText(this,"Please allow Permission!",Toast.LENGTH_SHORT).show();
             }
-            requestPermissions(new String[]{Manifest.permission.SEND_SMS},
+            requestPermissions(new String[]{Manifest.permission.READ_CONTACTS},
                     READ_CONTACTS_PERMISSIONS_REQUEST);
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public void getPermissionToWriteContacts(){
+        if(ContextCompat.checkSelfPermission(this,Manifest.permission.WRITE_CONTACTS)
+                !=PackageManager.PERMISSION_GRANTED){
+            if(shouldShowRequestPermissionRationale(
+                    Manifest.permission.WRITE_CONTACTS
+            )){
+                Toast.makeText(this,"Please allow Permission!",Toast.LENGTH_SHORT).show();
+            }
+            requestPermissions(new String[]{Manifest.permission.WRITE_CONTACTS},
+                    WRITE_CONTACTS_PERMISSIONS_REQUEST);
         }
     }
 
@@ -814,6 +873,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
             break;
 
+            case WRITE_CONTACTS_PERMISSIONS_REQUEST: {
+                if (grantResults.length == 1 &&
+                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this, "Write Contacts permission granted", Toast.LENGTH_SHORT).show();
+
+
+                } else {
+                    Toast.makeText(this, "Write Contacts permission denied", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+            }
+            break;
+
             case READ_EXTERNAL_STORAGE_PERMISSION_REQUEST: {
                 if (grantResults.length == 1 &&
                         grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -844,8 +916,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
-
-
 
 
     public class GetContact extends AsyncTask<String, Void, Void> {
@@ -925,7 +995,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 String id=smsInboxCursor.getString(typeid);
                 Long tt= Long.valueOf(date);
                 msg=msg.trim();
-                Log.i("tt",tt.toString());
                 String dateFromSms = simpleDateFormat.format(new Date(tt));
 
 
@@ -968,7 +1037,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 for (ArrayList<Message> tmpmsg : map_for_asyntask.values()) {
                     for (int j = 0; j < tmpmsg.size(); j++) {
-                        final Message mg = tmpmsg.get(j);
+                        Message mg = tmpmsg.get(j);
                         String tmp_id = mg.id;
                         if ((new Select().from(msg_sqldb.class).where("address = ?", mg.sender_address)
                                 .where("timestamp = ?",mg.timestamp).where("message = ?",mg.message)
@@ -978,7 +1047,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             msgSqldb.save();
                             flag1=1;
 
-
+                            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
 
                             Long t=System.currentTimeMillis();
                             String date=simpleDateFormat.format(new Date(t));
@@ -986,13 +1055,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             String currmnth=date.substring(3,5);
 
                             if(currmnth.equals(mg.date.substring(3,5))){
-
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        addtocountdb(mg);
-                                    }
-                                });
+                                addtocountdb(mg);
                             }
 
                            /* String id=msgSqldb.msg_id;
@@ -1207,74 +1270,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             });
 
-            rowView.setOnLongClickListener(new View.OnLongClickListener() {
-                @Override
-                public boolean onLongClick(View view) {
-                    final String number=hmap_for_db.get(hmsgsndrs.get(position)).get(0).sender_address;
-
-                    android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(MainActivity.this);
-                    builder.setTitle("Choose an option");
-                    builder.setItems(options, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            if(i==0)
-                            {
-                                new android.support.v7.app.AlertDialog.Builder(MainActivity.this).setTitle("Delete Complete Thread").
-                                        setMessage("Are You Sure You Want to delete all the messages").
-                                        setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialogInterface, int i) {
-                                                Log.i("YES","delete function reached");
-
-                                                progressDialog.setTitle("Deleting...");
-                                                progressDialog.show();
-                                                progressDialog.setCanceledOnTouchOutside(false);
-                                                MainActivity.Deletemessage deletemessage=new MainActivity.Deletemessage();
-                                                deletemessage.execute(number);
-                                                Toast.makeText(getApplicationContext(),"Complete Message deleted",Toast.LENGTH_SHORT).show();
-
-                                            }
-                                        })
-                                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialogInterface, int i) {
-                                                Log.i("NOT","DELETED");
-                                            }
-                                        }).show();
-                            }
-
-                            else if(i==1){
-                                new android.support.v7.app.AlertDialog.Builder(MainActivity.this).setTitle("Add this sender to Blocklist").
-                                        setMessage("Are You Sure You Want to Add this sender to Blocklist").
-                                        setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialogInterface, int i) {
-                                                Log.i("YES","Blocking function reached");
-
-                                                if(((new Select("*").from(BlockListsql.class)
-                                                        .where("number = ?",number).execute()).size())==0) {
-
-                                                    BlockListsql xp = new BlockListsql(number);
-                                                    xp.save();
-                                                    Toast.makeText(getApplicationContext(),"Added to BlockList",Toast.LENGTH_SHORT).show();
-                                                }
-                                            }
-                                        })
-                                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialogInterface, int i) {
-                                                Log.i("NOT","DELETED");
-                                            }
-                                        }).show();
-                            }
-                        }
-                    });
-                    builder.show();
-
-                    return false;
-                }
-            });
-
 
             return rowView;
         }
@@ -1362,71 +1357,146 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
-    public class Deletemessage extends AsyncTask<String,Void,Void> {
-        int flag1=0;
 
-        @Override
-        protected Void doInBackground(String... strings) {
-            String number=strings[0];
-            try {
-                Context context=getApplicationContext();
+    public boolean onCreateOptionsMenu(Menu menu) {
 
-                Uri uriSms = Uri.parse("content://sms");
-                Cursor c = context.getContentResolver().query(uriSms,
-                        new String[] { "_id", "thread_id", "address",
-                                "person", "date", "body" }, null, null, null);
+        getMenuInflater().inflate(R.menu.search_menu, menu);
+        return true;
+    }
 
-                if (c != null && c.moveToFirst()) {
-                    do {
-                        long id = c.getLong(0);
-                        long threadId = c.getLong(1);
-                        String address = c.getString(2);
-                        String body = c.getString(5);
-                        String date=c.getString(4);
+    // History
+    private void loadHistory(String query) {
 
-                        if (address.equals(number) ) {
-                            //mLogger.logInfo("Deleting SMS with id: " + threadId);
-                            context.getContentResolver().delete(
-                                    Uri.parse("content://sms/" + id), null, null);
-                            Log.i("DELETED ","FROM PHONE");
-                            break;
-                        }
-                    } while (c.moveToNext());
-                }
+        // Cursor
+        String[] columns = new String[] { "_id", "text" };
+        Object[] temp = new Object[] { 0, "default" };
+
+        MatrixCursor cursor = new MatrixCursor(columns);
 
 
-            } catch (Exception e) {
-                // mLogger.logError("Could not delete SMS from inbox: " + e.getMessage());
+
+        for(int i = 0; i < hmsgsndrs.size();i++) {
+            Log.i("hms",hmsgsndrs.get(i));
+
+
+            if(hmsgsndrs.get(i).contains(query)) {
+
+                temp[0] = i;
+                temp[1] = hmsgsndrs.get(i);//replaced s with i as s not used anywhere.
+
+                cursor.addRow(temp);
             }
 
+        }
+
+        // SearchView
+        SearchManager manager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+
+        final SearchView search = (SearchView) menu.findItem(R.id.search).getActionView();
 
 
-            new Delete().from(msg_sqldb.class).where("address = ?",number)
-                    .execute();
+        search.setSuggestionsAdapter(new SearchAdapter(this, cursor, hmsgsndrs));
 
-Log.i("YES","BABA");
-            runOnUiThread(new Runnable() {
+    }
+
+    public class SearchAdapter extends CursorAdapter {
+        private ArrayList<String> items;
+
+        private TextView text;
+
+        public SearchAdapter(Context context, Cursor cursor, ArrayList<String> items) {
+
+            super(context, cursor, false);
+
+            this.items = items;
+
+        }
+
+        @Override
+        public void bindView(View view, Context context, Cursor cursor) {
+
+            text.setText(items.get(cursor.getPosition()));
+
+        }
+
+        @Override
+        public View newView(Context context, Cursor cursor, ViewGroup parent) {
+
+            LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+
+            View view = inflater.inflate(R.layout.search_adapter, parent, false);
+
+            text = (TextView) view.findViewById(R.id.item);
+
+
+            text.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void run() {
-                    MainActivity inst = MainActivity.instance();
-                    inst.readfromdatabase();
+                public void onClick(View view) {
+                    String p=text.getText().toString();
+                    String name=null;
+                    if(contacts_for_db.containsKey(p))
+                        name=contacts_for_db.get(p);
+                    Intent in = new Intent(getBaseContext(), single_user_msg.class);
+                    Bundle args = new Bundle();
+                    args.putSerializable("ARRAYLIST", hmap_for_db.get(p));
+                    args.putSerializable("phonenumber",hmap_for_db.get(p).get(0).sender_address);
+                    args.putSerializable("name", name);
+                    in.putExtra("BUNDLE", args);
+                    startActivity(in);
+
+
                 }
             });
 
-
-
-            return null;
-        }
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            Log.i("Completeted","Database Updation");
-            set();
-            progressDialog.dismiss();
-
+            return view;
 
         }
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        if(toggle.onOptionsItemSelected(item)){
+            return true;
+        }
+
+        switch(item.getItemId())
+        {
+            case R.id.graph:
+                Log.i("search","x");
+                startActivity(new Intent(getApplicationContext(),Analytics.class));
+                break;
+            case R.id.search:
+                Log.i("search","y");
+                SearchManager manager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+
+                SearchView search = (SearchView) menu.findItem(R.id.search).getActionView();
+
+                search.setSearchableInfo(manager.getSearchableInfo(getComponentName()));
+
+                search.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+
+                    @Override
+                    public boolean onQueryTextSubmit(String query) {
+
+                        return false;
+                    }
+
+                    @Override
+                    public boolean onQueryTextChange(String query) {
+
+                        loadHistory(query);
+
+                        return true;
+
+                    }
+
+                });
+                break;
+        }
+        return true;
+
+    }
 
 
 
