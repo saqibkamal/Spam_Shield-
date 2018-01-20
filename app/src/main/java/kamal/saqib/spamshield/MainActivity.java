@@ -81,7 +81,6 @@ import static kamal.saqib.spamshield.R.id.txt_spam_count;
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
     private DrawerLayout mDrawer;
-    private int lolo;
     private  android.support.v7.app.ActionBarDrawerToggle toggle;
 
     private static final int READ_SMS_PERMISSIONS_REQUEST = 1;
