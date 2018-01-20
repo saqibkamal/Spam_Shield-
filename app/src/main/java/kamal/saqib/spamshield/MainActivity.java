@@ -603,6 +603,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         getPermissionToSendSMS();
         getPermissionToReadStorage();
         getPermissionToWriteStorage();
+        getPermissionToWriteContacts();
 
     }
 
@@ -669,8 +670,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             )){
                 Toast.makeText(this,"Please allow Permission!",Toast.LENGTH_SHORT).show();
             }
-            requestPermissions(new String[]{Manifest.permission.SEND_SMS},
+            requestPermissions(new String[]{Manifest.permission.READ_CONTACTS},
                     READ_CONTACTS_PERMISSIONS_REQUEST);
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public void getPermissionToWriteContacts(){
+        if(ContextCompat.checkSelfPermission(this,Manifest.permission.WRITE_CONTACTS)
+                !=PackageManager.PERMISSION_GRANTED){
+            if(shouldShowRequestPermissionRationale(
+                    Manifest.permission.WRITE_CONTACTS
+            )){
+                Toast.makeText(this,"Please allow Permission!",Toast.LENGTH_SHORT).show();
+            }
+            requestPermissions(new String[]{Manifest.permission.WRITE_CONTACTS},
+                    WRITE_CONTACTS_PERMISSIONS_REQUEST);
         }
     }
 
@@ -724,6 +739,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 } else {
                     Toast.makeText(this, "Read Contacts permission denied", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+            }
+            break;
+
+            case WRITE_CONTACTS_PERMISSIONS_REQUEST: {
+                if (grantResults.length == 1 &&
+                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this, "Write Contacts permission granted", Toast.LENGTH_SHORT).show();
+
+
+                } else {
+                    Toast.makeText(this, "Write Contacts permission denied", Toast.LENGTH_SHORT).show();
                     finish();
                 }
             }
