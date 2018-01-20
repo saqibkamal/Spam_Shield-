@@ -4,14 +4,29 @@
     <item
         android:id="@+id/settings"
         android:title="Settings"
+        android:icon="@mipmap/ic_setting"
 
         />
     <item
         android:id="@+id/blocked"
         android:title="Blocked"
+        android:icon="@drawable/ic_block_black_24dp"
         />
     <item
         android:id="@+id/spams"
-        android:title="Spams"/>
+        android:title="Spams"
+        android:icon="@mipmap/ic_spam"/>
+    <item
+        android:id="@+id/bug"
+        android:title="Report bug"
+        android:icon="@drawable/ic_bug"/>
+    <item
+        android:id="@+id/rate"
+        android:title="Rate us"
+        android:icon="@drawable/ic_rate"/>
+    <item
+        android:id="@+id/info"
+        android:title="About us"
+        android:icon="@drawable/ic_info"/>
 
 </menu>
