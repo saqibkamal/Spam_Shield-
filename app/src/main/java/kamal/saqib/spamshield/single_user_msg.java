@@ -4,6 +4,8 @@ import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -53,7 +55,7 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
     ArrayList<Message> msgs;
     String phoneNo,name;
     SimpleDateFormat simpleDateFormat;
-    final CharSequence options[] = new CharSequence[]{"Delete"};
+    final CharSequence options[] = new CharSequence[]{"Delete","Copy Message Text"};
     ProgressDialog progressDialog;
     private static single_user_msg inst;
 
@@ -293,7 +295,8 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
                     builder.setItems(options, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
-                            if(i==0){
+                            if(i==0)
+                            {
                                 new android.support.v7.app.AlertDialog.Builder(single_user_msg.this).setTitle("Delete").
                                         setMessage("Are You Sure You Want to delete the image").
                                         setPositiveButton("Yes", new DialogInterface.OnClickListener() {
@@ -318,6 +321,12 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
                                                 Log.i("NOT","DELETED");
                                             }
                                         }).show();
+                            }
+
+                            else if(i==1){
+                                ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                                ClipData clip = ClipData.newPlainText("label", msgs.get(position).message);
+                                clipboard.setPrimaryClip(clip);
                             }
                         }
                     });

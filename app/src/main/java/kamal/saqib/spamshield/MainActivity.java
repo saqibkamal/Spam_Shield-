@@ -57,6 +57,8 @@ import com.baoyz.swipemenulistview.SwipeMenuItem;
 import com.baoyz.swipemenulistview.SwipeMenuListView;
 import com.ebanx.swipebtn.OnStateChangeListener;
 import com.ebanx.swipebtn.SwipeButton;
+import com.vanniktech.emoji.EmojiManager;
+import com.vanniktech.emoji.one.EmojiOneProvider;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -237,6 +239,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             editor.putString("spamonoff","off");
             editor.commit();
         }
+
+
+
 
 
         simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");

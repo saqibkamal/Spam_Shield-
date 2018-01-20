@@ -46,7 +46,9 @@
                 />
         </RelativeLayout>
 
-        <EditText
+
+
+        <com.vanniktech.emoji.EmojiEditText
             android:id="@+id/edtxt_msg_bar"
             android:layout_width="287dp"
             android:layout_height="40dp"
