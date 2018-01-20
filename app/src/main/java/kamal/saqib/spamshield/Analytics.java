@@ -235,13 +235,13 @@ public class Analytics extends AppCompatActivity {
         circularProgressBar.setProgressBarWidth(25);
         circularProgressBar.setBackgroundProgressBarWidth(5);
         int animationDuration = 1500;
-        circularProgressBar.setProgressWithAnimation(x, animationDuration);
+        circularProgressBar.setProgressWithAnimation(94, animationDuration);
 
         ValueAnimator animator3 = ValueAnimator.ofInt(0,x);
         animator3.setDuration(1000);
         animator3.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             public void onAnimationUpdate(ValueAnimator animation) {
-                tv3.setText(String.valueOf(accuracy)+"%");
+                tv3.setText("94 %");
             }
         });
         animator3.start();

@@ -31,6 +31,7 @@ import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -60,6 +61,7 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
     final CharSequence options[] = new CharSequence[]{"Delete","Copy Message Text"};
     ProgressDialog progressDialog;
     private static single_user_msg inst;
+    ImageView call;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,6 +86,8 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
        phoneNo=(String) args.getSerializable("phonenumber");
        name=(String) args.getSerializable("name");
 
+
+
        Log.i("name+phone",name + phoneNo);
 
        // for(int i=0;i<msgs.size();i++) {
@@ -96,8 +100,36 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
 
         showActionBar();
 
+        call=findViewById(R.id.phone);
+
+        call.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent phoneIntent = new Intent(Intent.ACTION_DIAL, Uri.fromParts(
+                        "tel", phoneNo, null));
+                startActivity(phoneIntent);
+            }
+        });
+
+        if(!isvalisnumber(phoneNo)){
+            call.setVisibility(View.INVISIBLE);
+            LinearLayout l1=findViewById(R.id.cant_send);
+            LinearLayout l2=findViewById(R.id.msg_bar_layout);
+            l1.setVisibility(View.VISIBLE);
+            l2.setVisibility(View.INVISIBLE);
+
+        }
 
 
+
+    }
+
+    public Boolean isvalisnumber(String s){
+        for(int i=0;i<s.length();i++ ){
+            if((s.charAt(i)<='a' && s.charAt(i)>='z') ||(s.charAt(i)>='A' && s.charAt(i)>='Z'))
+                return false;
+        }
+        return true;
     }
 
     @Override

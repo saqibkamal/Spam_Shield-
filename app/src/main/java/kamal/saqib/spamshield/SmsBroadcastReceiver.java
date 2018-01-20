@@ -96,6 +96,8 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
     public void Notification(Context context, Message mg) {
         // Set Notification Title
         String strtitle = "New Message";
+        String a=sharedpreferences.getString("sound",null);
+        String b=sharedpreferences.getString("messagepreview",null);
 
         // Open NotificationView Class on Notification Click
         Intent intent = new Intent(context, NotificationView.class);
@@ -103,27 +105,35 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
         intent.putExtra("title", mg.sender_address);
         intent.putExtra("text", mg.message);
         // Open NotificationView.java Activity
-        PendingIntent pIntent = PendingIntent.getActivity(context, 0, intent,
-                PendingIntent.FLAG_UPDATE_CURRENT);
-
+        PendingIntent contentIntent = PendingIntent.getActivity(context, 0,
+                new Intent(context, MainActivity.class), PendingIntent.FLAG_UPDATE_CURRENT);
         // Create Notification using NotificationCompat.Builder
         NotificationCompat.Builder builder = new NotificationCompat.Builder(
                 context)
-                // Set Icon
                 .setSmallIcon(R.drawable.ic_message)
-                // Set Ticker Message
-                .setTicker(mg.message)
-                // Set Title
-                .setContentTitle(mg.sender_address)
-                // Set Text
-                .setContentText(mg.message)
-                // Add an Action Button below Notification
-                .addAction(R.drawable.bow_icon, "Action Button", pIntent)
-                // Set PendingIntent into Notification
-                .setContentIntent(pIntent)
-                // Dismiss Notification
-                .setAutoCancel(true)
-                .setSound(Uri.parse("android.resource://" + "kamal.saqib.spamshield" + "/" + R.raw.notification));
+              //  .addAction(R.drawable.bow_icon, "Action Button", pIntent)
+                .setContentIntent(contentIntent)
+                .setAutoCancel(true);
+
+
+
+        if(b==null || b.equals("on")){
+            //builder.setTicker(mg.message);
+            builder.setContentTitle(mg.sender_address);
+            builder.setContentText(mg.message);
+        }
+        else {
+            builder.setContentTitle("New message from :" );
+            builder.setContentText(mg.sender_address);
+        }
+
+        if(a==null || a.equals("on"))
+            builder.setSound(Uri.parse("android.resource://" + "kamal.saqib.spamshield" + "/" + R.raw.notification));
+
+        Log.i("asound, bperv",a + b);
+
+
+
 
 
 

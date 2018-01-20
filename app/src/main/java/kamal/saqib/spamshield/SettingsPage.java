@@ -35,7 +35,7 @@ public class SettingsPage extends AppCompatActivity {
 
         String ntf=sharedpreferences.getString("notification",null);
         String msgprv=sharedpreferences.getString("messagepreview",null);
-        final String sond=sharedpreferences.getString("notification",null);
+        final String sond=sharedpreferences.getString("sound",null);
 
         if(ntf==null || ntf.equals("on")){
             notification.setChecked(true);

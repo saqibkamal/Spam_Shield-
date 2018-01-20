@@ -124,7 +124,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.screen_first);
 
         //getAllPermission();
-        getAllPermission();
+       // getAllPermission();
 
         mDrawer = (DrawerLayout)findViewById(R.id.drawer_layout);
         toggle = new android.support.v7.app.ActionBarDrawerToggle(this,mDrawer,R.string.open,R.string.close);
@@ -371,7 +371,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void showActionBar(){
         LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View v = inflater.inflate(R.layout.screen1,null);
+        View v = inflater.inflate(R.layout.actionbar_first_screen,null);
         final ActionBar bar = getSupportActionBar();
         bar.setDisplayHomeAsUpEnabled(true);
         bar.setDisplayShowHomeEnabled(false);
