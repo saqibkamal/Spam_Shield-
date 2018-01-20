@@ -125,6 +125,8 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
                 .setAutoCancel(true)
                 .setSound(Uri.parse("android.resource://" + "kamal.saqib.spamshield" + "/" + R.raw.notification));
 
+
+
         // Create Notification Manager
         NotificationManager notificationmanager = (NotificationManager) context
                 .getSystemService(Context.NOTIFICATION_SERVICE);
@@ -139,8 +141,11 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
         Log.i("NEW ","msg received");
         updatecountdb(mg);
         MainActivity inst = MainActivity.instance();
+        String x=sharedpreferences.getString("notification",null);
+       // Log.i("shared",x);
         if(mg.spam.equals("ham"))
-            Notification(ctx,mg);
+            if(x==null || x.equals("on"))
+                Notification(ctx,mg);
         if(inst!=null ){
 
             //inst.addtocountdb(mg);
@@ -148,10 +153,22 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
             inst.updateInbox(mg);
             single_user_msg inst2=single_user_msg.instance();
             if(inst2!=null && inst2.phoneNo.equals(mg.sender_address)){
-                inst2.msgs.add(0,mg);
+                inst2.msgs.add(inst2.msgs.size(),mg);
                 inst2.set();
             }
+
+            Spam_msgs ins=Spam_msgs.instance();
+            if(ins!=null){
+                ins.updateInbox(mg);
+                single_user_msg ins2=single_user_msg.instance();
+                if(ins2!=null && ins2.phoneNo.equals(mg.sender_address)){
+                    ins2.msgs.add(ins2.msgs.size(),mg);
+                    ins2.set();
+                }
+            }
+
         }
+
 
     }
     public void updatecountdb(Message mg){
@@ -198,61 +215,67 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
                 date = strings[2];
                 timestamp = strings[4];
 
-            spamon=sharedpreferences.getString("spamonoff","ham");
-            if(spamon==null || spamon.equals("on")) {
+                if(((new Select("*").from(BlockListsql.class)
+                   .where("number = ?",sender).execute()).size())==0) {
+
+                    spamon = sharedpreferences.getString("spamonoff", "ham");
+                    if (spamon == null || spamon.equals("on")) {
 
 
-                HttpClient httpclient;
-                HttpResponse response = null;
-                result = "";
-                try {
-                    Log.i("timestamp", timestamp);
-                    httpclient = new DefaultHttpClient();
+                        HttpClient httpclient;
+                        HttpResponse response = null;
+                        result = "";
+                        try {
+                            Log.i("timestamp", timestamp);
+                            httpclient = new DefaultHttpClient();
 
-                    HttpPost post = new HttpPost("https://spamshield.herokuapp.com/predict");
+                            HttpPost post = new HttpPost("https://spamshield.herokuapp.com/predict");
 
-                    JSONObject json = new JSONObject();
-                    json.put("messagejson", msg);
-                    StringEntity se;
-                    se = new StringEntity(json.toString());
-                    post.setEntity(se);
+                            JSONObject json = new JSONObject();
+                            json.put("messagejson", msg);
+                            StringEntity se;
+                            se = new StringEntity(json.toString());
+                            post.setEntity(se);
 
-                    post.setHeader("Content-type", "application/json");
-                    response = httpclient.execute(post);
-                    Log.i("msgr", "result");
+                            post.setHeader("Content-type", "application/json");
+                            response = httpclient.execute(post);
+                            Log.i("msgr", "result");
 
-                } catch (Exception e) {
-                    result = "error1";
-                }
+                        } catch (Exception e) {
+                            result = "error1";
+                        }
 
-                try {
-                    BufferedReader rd = new BufferedReader(new InputStreamReader(
-                            response.getEntity().getContent()));
-                    String line = "";
-                    while ((line = rd.readLine()) != null) {
-                        result = result + line;
+                        try {
+                            BufferedReader rd = new BufferedReader(new InputStreamReader(
+                                    response.getEntity().getContent()));
+                            String line = "";
+                            while ((line = rd.readLine()) != null) {
+                                result = result + line;
+                            }
+                            Log.i("msgr", result);
+                        } catch (Exception e) {
+                            result = "error2";
+                        }
+
+                        Log.i("msgr", result);
                     }
-                    Log.i("msgr", result);
-                } catch (Exception e) {
-                    result = "error2";
                 }
-
-                Log.i("msgr", result);
-            }
+                else
+                    result="spam";
             return null;
 
         }
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            Log.i("Completeted","Chk ");
+            Log.i("Completeted","Chk of recieved message ");
             String ans;
             if(result!=null && result.contains("spam")){
                 ans="spam";
             }
             else
                 ans="ham";
-            Log.i("Result", String.valueOf(date.length()));
+            Log.i("Result",ans);
             Message mesg=new Message(id,sender,date,"1",msg,timestamp,ans);
             nextphase(mesg);
 

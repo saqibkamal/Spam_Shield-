@@ -64,7 +64,8 @@
                 <data android:scheme="mmsto" />
             </intent-filter>
         </activity>
-        <activity android:name=".single_user_msg"
+        <activity
+            android:name=".single_user_msg"
             android:windowSoftInputMode="stateVisible|adjustResize">
             <intent-filter android:priority="999">
                 <action android:name="android.intent.action.SEND" />
@@ -113,7 +114,8 @@
             android:value="3" />
         <meta-data
             android:name="AA_MODELS"
-            android:value="kamal.saqib.spamshield.msg_sqldb,kamal.saqib.spamshield.cntcts_sqldb,kamal.saqib.spamshield.msg_countdb" />
+            android:value="kamal.saqib.spamshield.msg_sqldb,
+            kamal.saqib.spamshield.BlockListsql,kamal.saqib.spamshield.cntcts_sqldb,kamal.saqib.spamshield.msg_countdb" />
 
         <service
             android:name=".MyService"
@@ -133,10 +135,20 @@
         </service>
 
         <activity android:name=".selectcontacts" />
-        <activity android:name=".Analytics"/>
-        <activity android:name=".CreateMessage"
-            android:windowSoftInputMode="stateVisible|adjustResize"/>
-        <activity android:name=".Spam_msgs"></activity>
+        <activity android:name=".Analytics" />
+        <activity
+            android:name=".CreateMessage"
+            android:windowSoftInputMode="stateVisible|adjustResize" />
+        <activity android:name=".Spam_msgs" />
+        <activity android:name=".SettingsPage" />
+        <activity android:name=".Block_List"></activity>
+
+        <provider
+            android:name="com.activeandroid.content.ContentProvider"
+            android:authorities="kamal.saqib.spamshield"
+            android:enabled="true"
+            android:exported="false">
+        </provider>
     </application>
 
 </manifest>

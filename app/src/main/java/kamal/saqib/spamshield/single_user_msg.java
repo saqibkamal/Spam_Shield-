@@ -25,6 +25,7 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
@@ -51,6 +52,7 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
     ListView messages;
     ArrayAdapter arrayAdapter;
     EditText msg_box;
+    ImageView emoji;
     Button sendButton;
     ArrayList<Message> msgs;
     String phoneNo,name;
@@ -70,6 +72,8 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
 
         msg_box=(EditText) findViewById(R.id.edtxt_msg_bar);
         sendButton= findViewById(R.id.bt_send);
+        emoji=findViewById(R.id.imgv_emo);
+        emoji.setOnClickListener(this);
         simpleDateFormat=new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
        // arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, smsMessagesList);
       //  messages.setAdapter(arrayAdapter);
@@ -92,6 +96,8 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
 
         showActionBar();
 
+
+
     }
 
     @Override
@@ -103,18 +109,18 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
                 sendSMS(msg);
             }
         }
+        else if(view==emoji){
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.toggleSoftInput(InputMethodManager.SHOW_FORCED,0);
+        }
     }
 
     private void showActionBar(){
         LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View v = inflater.inflate(R.layout.actionbar_analytics,null);
+        View v = inflater.inflate(R.layout.actionbar_single_user,null);
         final ActionBar bar = getSupportActionBar();
 
         //to set name of the action at the middle
-        ActionBar.LayoutParams params = new ActionBar.LayoutParams(
-                ActionBar.LayoutParams.WRAP_CONTENT,
-                ActionBar.LayoutParams.MATCH_PARENT,
-                Gravity.CENTER);
         TextView textviewTitle = (TextView) v.findViewById(R.id.tv_title);
         textviewTitle.setText(name==null?phoneNo:name);
         ///////
@@ -123,7 +129,7 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
         bar.setDisplayShowHomeEnabled(false);
         bar.setDisplayShowCustomEnabled(true);
         bar.setDisplayShowTitleEnabled(false);
-        bar.setCustomView(v, params);
+        bar.setCustomView(v);
     }
 
     @Override

@@ -2,10 +2,13 @@ package kamal.saqib.spamshield;
 
 import android.content.Context;
 import android.content.Intent;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -26,6 +29,7 @@ public class Spam_msgs extends AppCompatActivity {
     ArrayList<String> smsgsndrs;
     HashMap<String,Message> s_fmsg;
     HashMap<String,String> contacts_for_db;
+    private static Spam_msgs inst;
 
     ListView ls;
 
@@ -36,6 +40,7 @@ public class Spam_msgs extends AppCompatActivity {
 
         ls=findViewById(R.id.list);
 
+        showActionBar();
         readfromdatabase();
         readcontactsfromdatabase();
     }
@@ -57,6 +62,25 @@ public class Spam_msgs extends AppCompatActivity {
             ActiveAndroid.endTransaction();
         }
 
+    }
+
+    public  void updateInbox(Message message) {
+
+        if (message.spam.equals("spam")) {
+            if (smsgsndrs.contains(message.sender_address)) {
+                s_fmsg.remove(message.sender_address);
+                s_fmsg.put(message.sender_address,message);
+                smap_for_db.get(message.sender_address).add(message);
+            } else {
+                smsgsndrs.add(message.sender_address);
+                ArrayList<Message> temp = new ArrayList<>();
+                temp.add(message);
+                smap_for_db.put(message.sender_address, temp);
+                s_fmsg.put(message.sender_address,message);
+            }
+        }
+        readfromdatabase();
+        //lv.setAdapter(new CustomAdapter(this));
     }
 
     public void readfromdatabase(){
@@ -182,6 +206,47 @@ public class Spam_msgs extends AppCompatActivity {
 
             return rowView;
         }
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        inst = this;
+    }
+
+    public static Spam_msgs instance() {
+        return inst;
+    }
+
+    private void showActionBar(){
+        LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View v = inflater.inflate(R.layout.actionbar_analytics,null);
+        final ActionBar bar = getSupportActionBar();
+
+        //to set name of the action at the middle
+        ActionBar.LayoutParams params = new ActionBar.LayoutParams(
+                ActionBar.LayoutParams.WRAP_CONTENT,
+                ActionBar.LayoutParams.MATCH_PARENT,
+                Gravity.CENTER);
+        TextView textviewTitle = (TextView) v.findViewById(R.id.tv_title);
+        textviewTitle.setText("Spam Messages");
+        ///////
+        bar.setHomeButtonEnabled(true);
+        bar.setDisplayHomeAsUpEnabled(true);
+        bar.setDisplayShowHomeEnabled(false);
+        bar.setDisplayShowCustomEnabled(true);
+        bar.setDisplayShowTitleEnabled(false);
+        bar.setCustomView(v, params);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()){
+            case android.R.id.home:
+                onBackPressed();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
 }

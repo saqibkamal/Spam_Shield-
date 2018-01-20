@@ -5,14 +5,12 @@ import android.animation.Animator;
 import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationManager;
-import android.app.SearchManager;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.database.MatrixCursor;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -30,7 +28,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewAnimationUtils;
@@ -42,7 +39,6 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
-import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.activeandroid.ActiveAndroid;
@@ -81,21 +77,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private DrawerLayout mDrawer;
     private  android.support.v7.app.ActionBarDrawerToggle toggle;
-    private Menu menu;
 
     private static final int READ_SMS_PERMISSIONS_REQUEST = 1;
     private static final int SEND_SMS_PERMISSIONS_REQUEST = 2;
     private static final int READ_CONTACTS_PERMISSIONS_REQUEST = 3;
     private static final int READ_EXTERNAL_STORAGE_PERMISSION_REQUEST = 4;
     private static final int WRITE_EXTERNAL_STORAGE_PERMISSION_REQUEST = 5;
-    private static final int WRITE_CONTACTS_PERMISSIONS_REQUEST = 6;
 
     private FloatingActionButton fab;
     private RelativeLayout layoutMain;
     private RelativeLayout layoutContent;
-
-    private List<String> items;
-
     private  boolean isOpen=false;
     TextView spamcount;
 
@@ -162,14 +153,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
 
-        sharedpreferences = getSharedPreferences("Mydata", Context.MODE_PRIVATE);
-        editor=sharedpreferences.edit();
 
-        if (!Telephony.Sms.getDefaultSmsPackage(this).equals(myPackageName)) {
-            editor.putString("firsttime",null);
-            editor.commit();
 
-        }
+
+
 
 
 
@@ -517,75 +504,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    public boolean onCreateOptionsMenu(Menu menu) {
-
-        getMenuInflater().inflate(R.menu.navigation_items, menu);
-
-        this.menu = menu;
-
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-
-            SearchManager manager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-
-            SearchView search = (SearchView) menu.findItem(R.id.search).getActionView();
-
-            search.setSearchableInfo(manager.getSearchableInfo(getComponentName()));
-
-            search.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-
-                @Override
-                public boolean onQueryTextSubmit(String query) {
-                    return false;
-                }
-
-                @Override
-                public boolean onQueryTextChange(String query) {
-
-                    loadHistory(query);
-
-                    return true;
-
-                }
-
-            });
-
-        }
-
-        return true;
-
-    }
-
-    private void loadHistory(String query) {
-
-        // Cursor
-        String[] columns = new String[] { "_id", "text" };
-        Object[] temp = new Object[] { 0, "default" };
-
-        MatrixCursor cursor = new MatrixCursor(columns);
-
-        for(int i = 0; i < items.size(); i++) {
-
-            temp[0] = i;
-            temp[1] = items.get(i);  //replaced s with i as s not used anywhere.
-
-                    cursor.addRow(temp);
-
-        }
-
-        // SearchView
-        SearchManager manager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-
-        final SearchView search = (SearchView) menu.findItem(R.id.search).getActionView();
-
-        search.setSuggestionsAdapter(new SearchAdapter(this, cursor, items));
-
-    }
-
-
-
-
-
-
     public void viewMenu(){
         if(!isOpen){
             int x=layoutContent.getRight();
@@ -680,7 +598,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void  getAllPermission(){
         getPermissionToReadSMS();
         getPermissionToReadContacts();
-        getPermissionToWriteContacts();
         getPermissionToSendSMS();
         getPermissionToReadStorage();
         getPermissionToWriteStorage();
@@ -750,21 +667,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             )){
                 Toast.makeText(this,"Please allow Permission!",Toast.LENGTH_SHORT).show();
             }
-            requestPermissions(new String[]{Manifest.permission.READ_CONTACTS},
-                    READ_CONTACTS_PERMISSIONS_REQUEST);
-        }
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.M)
-    public void getPermissionToWriteContacts(){
-        if(ContextCompat.checkSelfPermission(this,Manifest.permission.WRITE_CONTACTS)
-                !=PackageManager.PERMISSION_GRANTED){
-            if(shouldShowRequestPermissionRationale(
-                    Manifest.permission.WRITE_CONTACTS
-            )){
-                Toast.makeText(this,"Please allow Permission!",Toast.LENGTH_SHORT).show();
-            }
-            requestPermissions(new String[]{Manifest.permission.WRITE_CONTACTS},
+            requestPermissions(new String[]{Manifest.permission.SEND_SMS},
                     READ_CONTACTS_PERMISSIONS_REQUEST);
         }
     }
@@ -819,19 +722,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 } else {
                     Toast.makeText(this, "Read Contacts permission denied", Toast.LENGTH_SHORT).show();
-                    finish();
-                }
-            }
-            break;
-
-            case WRITE_CONTACTS_PERMISSIONS_REQUEST: {
-                if (grantResults.length == 1 &&
-                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Toast.makeText(this, "Write Contacts permission granted", Toast.LENGTH_SHORT).show();
-
-
-                } else {
-                    Toast.makeText(this, "Write Contacts permission denied", Toast.LENGTH_SHORT).show();
                     finish();
                 }
             }
