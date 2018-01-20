@@ -81,6 +81,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final int READ_SMS_PERMISSIONS_REQUEST = 1;
     private static final int SEND_SMS_PERMISSIONS_REQUEST = 2;
     private static final int READ_CONTACTS_PERMISSIONS_REQUEST = 3;
+    private static final int READ_EXTERNAL_STORAGE_PERMISSION_REQUEST = 4;
+    private static final int WRITE_EXTERNAL_STORAGE_PERMISSION_REQUEST = 5;
 
     private FloatingActionButton fab;
     private RelativeLayout layoutMain;
@@ -118,6 +120,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         toggle.syncState();
 
         button=findViewById(R.id.button);
+
+        getAllPermission();
 
         button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -626,7 +630,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         getPermissionToReadSMS();
         getPermissionToReadContacts();
         getPermissionToSendSMS();
+        getPermissionToReadStorage();
+        getPermissionToWriteStorage();
 
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public void getPermissionToReadStorage() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            if (shouldShowRequestPermissionRationale(
+                    Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                Toast.makeText(this, "Please allow permission!", Toast.LENGTH_SHORT).show();
+            }
+            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                    READ_EXTERNAL_STORAGE_PERMISSION_REQUEST);
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public void getPermissionToWriteStorage() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            if (shouldShowRequestPermissionRationale(
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                Toast.makeText(this, "Please allow permission!", Toast.LENGTH_SHORT).show();
+            }
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    WRITE_EXTERNAL_STORAGE_PERMISSION_REQUEST);
+        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -641,10 +673,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     READ_SMS_PERMISSIONS_REQUEST);
         }
     }
-
-
-
-
 
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -729,6 +757,33 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }
             break;
+
+            case READ_EXTERNAL_STORAGE_PERMISSION_REQUEST: {
+                if (grantResults.length == 1 &&
+                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this, "Read Storage permission granted", Toast.LENGTH_SHORT).show();
+
+
+                } else {
+                    Toast.makeText(this, "Read Storage permission denied", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+            }
+            break;
+
+            case WRITE_EXTERNAL_STORAGE_PERMISSION_REQUEST: {
+                if (grantResults.length == 1 &&
+                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this, "Write Storage permission granted", Toast.LENGTH_SHORT).show();
+
+
+                } else {
+                    Toast.makeText(this, "Write Storage permission denied", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+            }
+            break;
+
             default:
                 super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
