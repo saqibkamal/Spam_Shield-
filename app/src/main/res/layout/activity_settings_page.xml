@@ -27,16 +27,33 @@
             android:background="@drawable/ic_notification"
             android:layout_centerVertical="true"
             />
-        <TextView
-            android:paddingLeft="30dp"
-            android:layout_centerVertical="true"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Notification"
-            android:textColor="#000"
-            android:fontFamily="@font/nexa_l"
-            android:textSize="20dp"
-            />
+            android:orientation="vertical">
+            <TextView
+                android:paddingLeft="30dp"
+                android:layout_centerVertical="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Notification"
+                android:textColor="#000"
+                android:fontFamily="@font/nexa_l"
+                android:textSize="20dp"
+                />
+
+            <TextView
+                android:paddingLeft="30dp"
+                android:layout_centerVertical="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Show notification of incoming messages"
+                android:textColor="#000"
+                android:fontFamily="@font/roboto_light"
+                android:textSize="12dp"
+                />
+
+        </LinearLayout>
 
     </LinearLayout>
 
@@ -47,6 +64,7 @@
         android:layout_centerVertical="true"
         android:layout_alignParentEnd="true"
         android:id="@+id/one"
+        android:paddingLeft="20dp"
         />
 
 </RelativeLayout>
@@ -73,6 +91,10 @@
                 android:background="@drawable/ic_message"
                 android:layout_centerVertical="true"
                 />
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
             <TextView
                 android:paddingLeft="30dp"
                 android:layout_centerVertical="true"
@@ -83,7 +105,17 @@
                 android:fontFamily="@font/nexa_l"
                 android:textSize="20dp"
                 />
-
+            <TextView
+                android:paddingLeft="30dp"
+                android:layout_centerVertical="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Display preview of the message"
+                android:textColor="#000"
+                android:fontFamily="@font/roboto_light"
+                android:textSize="12dp"
+                />
+        </LinearLayout>
         </LinearLayout>
 
 
@@ -93,6 +125,7 @@
             android:layout_centerVertical="true"
             android:layout_alignParentEnd="true"
             android:id="@+id/two"
+            android:paddingLeft="20dp"
             />
 
     </RelativeLayout>
@@ -119,6 +152,10 @@
                 android:background="@drawable/ic_snooze"
                 android:layout_centerVertical="true"
                 />
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
             <TextView
                 android:paddingLeft="30dp"
                 android:layout_centerVertical="true"
@@ -129,7 +166,17 @@
                 android:fontFamily="@font/nexa_l"
                 android:textSize="20dp"
                 />
-
+            <TextView
+                android:paddingLeft="30dp"
+                android:layout_centerVertical="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ring app notification sound "
+                android:textColor="#000"
+                android:fontFamily="@font/roboto_light"
+                android:textSize="12dp"
+                />
+        </LinearLayout>
         </LinearLayout>
 
 
@@ -139,6 +186,7 @@
             android:layout_centerVertical="true"
             android:layout_alignParentEnd="true"
             android:id="@+id/three"
+            android:paddingLeft="20dp"
             />
 
     </RelativeLayout>

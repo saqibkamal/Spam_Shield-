@@ -43,6 +43,7 @@ dependencies {
     compile 'com.ebanx:swipe-button:0.4.0'
     compile 'com.mikhaellopez:circularprogressbar:1.1.1'
     compile 'com.miguelcatalan:materialsearchview:1.4.0'
+    compile 'com.github.medyo:android-about-page:1.2.2'
 
 
 }

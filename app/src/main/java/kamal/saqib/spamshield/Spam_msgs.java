@@ -181,13 +181,15 @@ public class Spam_msgs extends AppCompatActivity {
 
             holder.fmsg.setText(s_fmsg.get(result.get(position)).message);
 
+             String name=null;
             String ph_no = result.get(position);
             if (contacts_for_db.containsKey(ph_no))
-                holder.tv.setText(contacts_for_db.get(ph_no));
+                name=contacts_for_db.get(ph_no);
+            holder.tv.setText(name);
 
 
-
-
+            final String finalName = name;
+            final String finalName1 = name;
             rowView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -197,6 +199,7 @@ public class Spam_msgs extends AppCompatActivity {
                     Bundle args = new Bundle();
                     args.putSerializable("ARRAYLIST", smap_for_db.get(p));
                     args.putSerializable("phonenumber",smap_for_db.get(p).get(0).sender_address);
+                    args.putSerializable("name", finalName1);
                     in.putExtra("BUNDLE", args);
                     startActivity(in);
 

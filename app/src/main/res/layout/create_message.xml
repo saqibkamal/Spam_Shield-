@@ -21,7 +21,9 @@
           android:background="@drawable/add_emo_circle"
           android:layout_centerVertical="true"
           android:layout_weight="1"
-          android:gravity="center">
+          android:gravity="center"
+          android:translationZ="12dp"
+          android:elevation="16dp">
           <ImageView
               android:layout_width="25dp"
               android:layout_height="25dp"
@@ -42,6 +44,7 @@
             android:fontFamily="@font/nexa_l"
             android:hint="Type to compose"
             android:paddingLeft="9dp"
+            android:clickable="false"
             android:paddingRight="9dp"
             android:textSize="17dp" />
 
@@ -50,10 +53,12 @@
             android:layout_height="55dp"
             android:layout_weight="1"
             android:id="@+id/bt_send"
+            android:translationZ="12dp"
+            android:elevation="6dp"
             android:background="@mipmap/ic_send_msg"
             android:layout_centerVertical="true"
             android:layout_alignParentEnd="true"
-            android:elevation="6dp"
+
            />
 
     </LinearLayout>

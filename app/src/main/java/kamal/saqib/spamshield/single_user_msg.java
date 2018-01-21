@@ -25,6 +25,7 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
@@ -49,6 +50,7 @@ import java.util.Random;
 import static java.lang.Long.valueOf;
 
 public class single_user_msg extends AppCompatActivity implements Serializable,View.OnClickListener {
+    private AlphaAnimation btClick=new AlphaAnimation(2F,0.5F);
     ArrayList<String> smsMessagesList = new ArrayList<>();
     ListView messages;
     ArrayAdapter arrayAdapter;
@@ -105,7 +107,7 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
         call.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                view.startAnimation(btClick);
                 Intent phoneIntent = new Intent(Intent.ACTION_DIAL, Uri.fromParts(
                         "tel", phoneNo, null));
                 startActivity(phoneIntent);
@@ -136,6 +138,7 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
     @Override
     public void onClick(View view) {
         if (view == sendButton) {
+            view.startAnimation(btClick);
             String msg = msg_box.getText().toString();
             if (msg.length() > 0) {
                 msg = msg.trim();
@@ -143,6 +146,7 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
             }
         }
         else if(view==emoji){
+            view.startAnimation(btClick);
             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.toggleSoftInput(InputMethodManager.SHOW_FORCED,0);
         }

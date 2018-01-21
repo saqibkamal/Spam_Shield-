@@ -10,6 +10,7 @@ import android.app.ProgressDialog;
 import android.app.SearchManager;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -116,6 +117,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     SimpleDateFormat simpleDateFormat=new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
 
+    final CharSequence options[] = new CharSequence[]{"Delete Thread","Add to blocklist"};
+
     HashMap<String,ArrayList<Message>> map_for_asyntask,smap_for_db,hmap_for_db;
     ArrayList<String> msgids_for_asynctask,smsgsndrs,sfmsgs,hfmsgs,hmsgsndrs;
     HashMap<String,Message> s_fmsg,h_fmsg;
@@ -142,17 +145,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         toggle.syncState();
 
 
-        final String myPackageName = getPackageName();
-        if (!Telephony.Sms.getDefaultSmsPackage(this).equals(myPackageName)) {
-            Intent intent =
-                    new Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT);
-            intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME,
-                    myPackageName);
-            startActivity(intent);
-        }
-        else {
-
-        }
 
         //button=findViewById(R.id.button);
 
@@ -257,6 +249,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             editor.commit();
             editor.putString("spamonoff","off");
             editor.commit();
+
+
+
 
 
 
@@ -698,8 +693,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void set(){
-        if(alertDialog.isShowing())
-            alertDialog.dismiss();
+
         lv.setAdapter(new CustomAdapter(this));
     }
 
@@ -758,6 +752,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 intent.putExtra(Intent.EXTRA_EMAIL, new String[] { "spamshield2k18@gmail.com" });
                 intent.putExtra(Intent.EXTRA_SUBJECT, "Bug Report");
                 startActivity(intent);
+                return true;
+            case R.id.info:
+                startActivity(new Intent(getApplicationContext(), AboutUS.class));
                 return true;
             default:
                 return false;
@@ -1325,6 +1322,76 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             });
 
 
+            rowView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View view) {
+                    final String number=hmap_for_db.get(hmsgsndrs.get(position)).get(0).sender_address;
+
+                    android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(MainActivity.this);
+                    builder.setTitle("Choose an option");
+                    builder.setItems(options, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            if(i==0)
+                            {
+                                new android.support.v7.app.AlertDialog.Builder(MainActivity.this).setTitle("Delete Complete Thread").
+                                        setMessage("Are You Sure You Want to delete all the messages").
+                                        setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialogInterface, int i) {
+                                                Log.i("YES","delete function reached");
+
+                                                progressDialog.setTitle("Deleting...");
+                                                progressDialog.show();
+                                                progressDialog.setCanceledOnTouchOutside(false);
+                                                MainActivity.Deletemessage deletemessage=new MainActivity.Deletemessage();
+                                                deletemessage.execute(number);
+                                                Toast.makeText(getApplicationContext(),"Complete Message deleted",Toast.LENGTH_SHORT).show();
+
+                                            }
+                                        })
+                                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialogInterface, int i) {
+                                                Log.i("NOT","DELETED");
+                                            }
+                                        }).show();
+                            }
+
+                            else if(i==1){
+                                new android.support.v7.app.AlertDialog.Builder(MainActivity.this).setTitle("Add this sender to Blocklist").
+                                        setMessage("Are You Sure You Want to Add this sender to Blocklist").
+                                        setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialogInterface, int i) {
+                                                Log.i("YES","Blocking function reached");
+
+                                                if(((new Select("*").from(BlockListsql.class)
+                                                        .where("number = ?",number).execute()).size())==0) {
+
+                                                    BlockListsql xp = new BlockListsql(number);
+                                                    xp.save();
+                                                    Toast.makeText(getApplicationContext(),"Added to BlockList",Toast.LENGTH_SHORT).show();
+                                                }
+                                            }
+                                        })
+                                        .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialogInterface, int i) {
+                                                Log.i("NOT","DELETED");
+                                            }
+                                        }).show();
+                            }
+                        }
+                    });
+                    builder.show();
+
+                    return false;
+                }
+            });
+
+
+
             return rowView;
         }
     }
@@ -1569,6 +1636,72 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return true;
 
     }
+
+    public class Deletemessage extends AsyncTask<String,Void,Void> {
+        int flag1=0;
+
+        @Override
+        protected Void doInBackground(String... strings) {
+            String number=strings[0];
+            try {
+                Context context=getApplicationContext();
+
+                Uri uriSms = Uri.parse("content://sms");
+                Cursor c = context.getContentResolver().query(uriSms,
+                        new String[] { "_id", "thread_id", "address",
+                                "person", "date", "body" }, null, null, null);
+
+                if (c != null && c.moveToFirst()) {
+                    do {
+                        long id = c.getLong(0);
+                        long threadId = c.getLong(1);
+                        String address = c.getString(2);
+                        String body = c.getString(5);
+                        String date=c.getString(4);
+
+                        if (address.equals(number) ) {
+                            //mLogger.logInfo("Deleting SMS with id: " + threadId);
+                            context.getContentResolver().delete(
+                                    Uri.parse("content://sms/" + id), null, null);
+                            Log.i("DELETED ","FROM PHONE");
+                            break;
+                        }
+                    } while (c.moveToNext());
+                }
+
+
+            } catch (Exception e) {
+                // mLogger.logError("Could not delete SMS from inbox: " + e.getMessage());
+            }
+
+
+
+            new Delete().from(msg_sqldb.class).where("address = ?",number)
+                    .execute();
+
+            Log.i("YES","BABA");
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    MainActivity inst = MainActivity.instance();
+                    inst.readfromdatabase();
+                }
+            });
+
+
+
+            return null;
+        }
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            Log.i("Completeted","Database Updation");
+            set();
+            progressDialog.dismiss();
+
+
+        }
+    }
+
 
 
 
