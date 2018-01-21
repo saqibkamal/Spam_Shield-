@@ -105,6 +105,7 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
         call.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
                 Intent phoneIntent = new Intent(Intent.ACTION_DIAL, Uri.fromParts(
                         "tel", phoneNo, null));
                 startActivity(phoneIntent);
@@ -126,7 +127,7 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
 
     public Boolean isvalisnumber(String s){
         for(int i=0;i<s.length();i++ ){
-            if((s.charAt(i)<='a' && s.charAt(i)>='z') ||(s.charAt(i)>='A' && s.charAt(i)>='Z'))
+            if((s.charAt(i)>='a' && s.charAt(i)<='z') ||(s.charAt(i)>='A' && s.charAt(i)<='Z'))
                 return false;
         }
         return true;
@@ -168,7 +169,8 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()){
             case android.R.id.home:
-                onBackPressed();
+                startActivity(new Intent(getApplicationContext(),MainActivity.class));
+                finish();
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -311,15 +313,14 @@ public class single_user_msg extends AppCompatActivity implements Serializable,V
 
             if(msgs.get(position).type.equals("1")){
                 holder.tv.setLeft();
-                holder.tv.setTitleMessages(msgs.get(position).date);
-                holder.tv.setDecsMessages(msgs.get(position).message);
-                holder.tv.setBackgroundColor(R.color.black);
+                holder.tv.setTitleMessages(msgs.get(position).message);
+                holder.tv.setDecsMessages(msgs.get(position).date);
+
             }
             else{
                 holder.tv.setRight();
-                holder.tv.setTitleMessages(msgs.get(position).date);
-                holder.tv.setDecsMessages(msgs.get(position).message);
-                holder.tv.setBackgroundColor(R.color.grey_50);
+                holder.tv.setTitleMessages(msgs.get(position).message);
+                holder.tv.setDecsMessages(msgs.get(position).date);
 
             }
             //holder.img.setImageResource(imageId[position]);

@@ -18,12 +18,13 @@
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical">
+        android:gravity="center_vertical"
+        android:paddingBottom="10dp">
 
         <ImageView
             android:layout_width="25dp"
             android:layout_height="25dp"
-            android:background="@drawable/ic_info"
+            android:background="@drawable/ic_notification"
             android:layout_centerVertical="true"
             />
         <TextView
@@ -62,13 +63,14 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical">
+            android:gravity="center_vertical"
+            android:paddingBottom="10dp">
 
             <ImageView
                 android:id="@+id/icon1"
                 android:layout_width="25dp"
                 android:layout_height="25dp"
-                android:background="@drawable/ic_info"
+                android:background="@drawable/ic_message"
                 android:layout_centerVertical="true"
                 />
             <TextView
@@ -107,13 +109,14 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="center_vertical">
+            android:gravity="center_vertical"
+            android:paddingBottom="10dp">
 
             <ImageView
                 android:id="@+id/icon3"
                 android:layout_width="25dp"
                 android:layout_height="25dp"
-                android:background="@drawable/ic_info"
+                android:background="@drawable/ic_snooze"
                 android:layout_centerVertical="true"
                 />
             <TextView

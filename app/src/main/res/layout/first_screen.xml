@@ -142,13 +142,13 @@
             android:layout_below="@+id/box"
            >
 
-            <com.baoyz.swipemenulistview.SwipeMenuListView
+            <ListView
                 android:id="@+id/lv_msg"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5dp">
 
-            </com.baoyz.swipemenulistview.SwipeMenuListView>
+            </ListView>
 
             <android.support.design.widget.FloatingActionButton
                 android:id="@+id/big_button"
@@ -166,6 +166,7 @@
 
     </RelativeLayout>
     <android.support.design.widget.NavigationView
+        android:id="@+id/navigationview"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         app:menu="@menu/navigation_items"

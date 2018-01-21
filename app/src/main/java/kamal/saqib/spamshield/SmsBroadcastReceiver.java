@@ -110,7 +110,7 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
         // Create Notification using NotificationCompat.Builder
         NotificationCompat.Builder builder = new NotificationCompat.Builder(
                 context)
-                .setSmallIcon(R.drawable.ic_message)
+                .setSmallIcon(R.mipmap.main_logo)
               //  .addAction(R.drawable.bow_icon, "Action Button", pIntent)
                 .setContentIntent(contentIntent)
                 .setAutoCancel(true);

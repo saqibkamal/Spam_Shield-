@@ -6,6 +6,7 @@ import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.ProgressDialog;
 import android.app.SearchManager;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -24,6 +25,7 @@ import android.provider.Telephony;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.CursorAdapter;
@@ -83,7 +85,7 @@ import dmax.dialog.SpotsDialog;
 import static kamal.saqib.spamshield.R.id.txt_msg1;
 import static kamal.saqib.spamshield.R.id.txt_spam_count;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener{
+public class MainActivity extends AppCompatActivity implements View.OnClickListener,NavigationView.OnNavigationItemSelectedListener{
 
     private DrawerLayout mDrawer;
     private  android.support.v7.app.ActionBarDrawerToggle toggle;
@@ -102,6 +104,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private  boolean isOpen=false;
     TextView spamcount,spamcountsmall;
 
+    ProgressDialog progressDialog;
     private List<String> items;
 
     private Menu menu;
@@ -111,10 +114,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     AlertDialog alertDialog;
     Button button;
 
+    SimpleDateFormat simpleDateFormat=new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
+
     HashMap<String,ArrayList<Message>> map_for_asyntask,smap_for_db,hmap_for_db;
     ArrayList<String> msgids_for_asynctask,smsgsndrs,sfmsgs,hfmsgs,hmsgsndrs;
     HashMap<String,Message> s_fmsg,h_fmsg;
-    SimpleDateFormat simpleDateFormat;
     HashMap<String,String> contacts_for_db,contacts_for_asynctask;
     private static MainActivity inst;
 
@@ -137,9 +141,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mDrawer.addDrawerListener(toggle);
         toggle.syncState();
 
+
+        final String myPackageName = getPackageName();
+        if (!Telephony.Sms.getDefaultSmsPackage(this).equals(myPackageName)) {
+            Intent intent =
+                    new Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT);
+            intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME,
+                    myPackageName);
+            startActivity(intent);
+        }
+        else {
+
+        }
+
         //button=findViewById(R.id.button);
 
-        getAllPermission();
+        layoutMain=findViewById(R.id.layoutMain);
+
+        //getAllPermission();
+        progressDialog = new ProgressDialog(MainActivity.this);
+        progressDialog.setTitle("Setting Up...");
+        progressDialog.show();
+        progressDialog.setCanceledOnTouchOutside(false);
 
 
 
@@ -152,17 +175,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });*/
 
 
-        final String myPackageName = getPackageName();
-        if (!Telephony.Sms.getDefaultSmsPackage(this).equals(myPackageName)) {
-            Intent intent =
-                    new Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT);
-            intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME,
-                    myPackageName);
-            startActivity(intent);
-        }
-        else {
-            Toast.makeText(getApplicationContext(),"Default Messaging App",Toast.LENGTH_LONG).show();
-        }
 
 
 
@@ -173,7 +185,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
 
-        layoutMain=findViewById(R.id.layoutMain);
+
         //layoutContent=findViewById(R.id.layoutContent);
         fab=findViewById(R.id.big_button);
 
@@ -204,7 +216,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         lv = findViewById(R.id.lv_msg);
 
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
 
         Long t=System.currentTimeMillis();
         String date=simpleDateFormat.format(new Date(t));
@@ -216,8 +227,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
 
-        alertDialog = new SpotsDialog(this);
-        alertDialog.show();
+
 
         showActionBar();
 
@@ -230,12 +240,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         s_fmsg=new HashMap<>();
         h_fmsg=new HashMap<>();
 
+        setNavigationViewListener();
+
         GetContact getContact = new GetContact();
         getContact.execute();
 
         String x=sharedpreferences.getString("firsttime",null);
        // Log.i("VALUE OF X IS ",x);
-        if(x==null){
+
             editor.putString("firsttime","no");
             editor.commit();
             Log.i("First","time");
@@ -245,13 +257,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             editor.commit();
             editor.putString("spamonoff","off");
             editor.commit();
-        }
 
 
 
 
 
-        simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
+
+
 
         readcontactsfromdatabase();
         readfromdatabase();
@@ -299,13 +311,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
 
-        ImageView analytics = findViewById(R.id.ic_graph);
+        /*ImageView analytics = findViewById(R.id.ic_graph);
         analytics.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 startActivity(new Intent(getApplicationContext(),Analytics.class));
             }
-        });
+        });*/
 
 
 
@@ -414,11 +426,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         LayoutInflater inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View v = inflater.inflate(R.layout.actionbar_first_screen,null);
         final ActionBar bar = getSupportActionBar();
+        bar.setTitle("Messages");
         bar.setDisplayHomeAsUpEnabled(true);
         bar.setDisplayShowHomeEnabled(false);
         bar.setDisplayShowCustomEnabled(true);
-        bar.setDisplayShowTitleEnabled(false);
-        bar.setCustomView(v);
+        bar.setDisplayShowTitleEnabled(true);
+        //bar.setCustomView(v);
 
     }
 
@@ -505,7 +518,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }
             if (hmap_for_db.size() != 0 || smap_for_db.size() != 0)
-                alertDialog.dismiss();
+                progressDialog.dismiss();
             lv.setAdapter(new CustomAdapter(this));
             ActiveAndroid.setTransactionSuccessful();
 
@@ -553,7 +566,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if((new Select().from(msg_countdb.class).where("date = ?",date).execute()).size()==0){
             msg_countdb msgCountdb =new msg_countdb(date,1,message.spam.equals("spam")?1:0);
             msgCountdb.save();
-            Log.i("Update on old","Successful");
+
 
         }
         else{
@@ -575,7 +588,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     .where("date = ?", date)
                     .execute();
 
-            Log.i("Update on new","Successful");
+
         }
         setcount();
     }
@@ -694,7 +707,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         spamcount=findViewById(R.id.txt_spam_count);
         spamcountsmall=findViewById(R.id.txt_spam_count_small);
 
-        SimpleDateFormat simpleDateFormat=new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
+
         Long t=System.currentTimeMillis();
         String date=simpleDateFormat.format(new Date(t));
 
@@ -716,6 +729,40 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
 
+    }
+
+    private void setNavigationViewListener() {
+        NavigationView navigationView = (NavigationView) findViewById(R.id.navigationview);
+        navigationView.setNavigationItemSelectedListener(this);
+    }
+
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+
+
+        switch (item.getItemId()) {
+            case R.id.settings:
+                startActivity(new Intent(getApplicationContext(), SettingsPage.class));
+                return true;
+            case R.id.blocked:
+                startActivity(new Intent(getApplicationContext(), Block_List.class));
+
+                return true;
+            case R.id.spams:
+                startActivity(new Intent(getApplicationContext(), Spam_msgs.class));
+                return true;
+
+            case R.id.bug:
+                Intent intent = new Intent(Intent.ACTION_SEND);
+                intent.setType("message/rfc822");
+                intent.putExtra(Intent.EXTRA_EMAIL, new String[] { "spamshield2k18@gmail.com" });
+                intent.putExtra(Intent.EXTRA_SUBJECT, "Bug Report");
+                startActivity(intent);
+                return true;
+            default:
+                return false;
+
+        }
     }
 
 
@@ -1037,7 +1084,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 for (ArrayList<Message> tmpmsg : map_for_asyntask.values()) {
                     for (int j = 0; j < tmpmsg.size(); j++) {
-                        Message mg = tmpmsg.get(j);
+                        final Message mg = tmpmsg.get(j);
                         String tmp_id = mg.id;
                         if ((new Select().from(msg_sqldb.class).where("address = ?", mg.sender_address)
                                 .where("timestamp = ?",mg.timestamp).where("message = ?",mg.message)
@@ -1047,7 +1094,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             msgSqldb.save();
                             flag1=1;
 
-                            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
+
 
                             Long t=System.currentTimeMillis();
                             String date=simpleDateFormat.format(new Date(t));
@@ -1055,7 +1102,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                             String currmnth=date.substring(3,5);
 
                             if(currmnth.equals(mg.date.substring(3,5))){
-                                addtocountdb(mg);
+
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        addtocountdb(mg);
+                                    }
+                                });
+
                             }
 
                            /* String id=msgSqldb.msg_id;
@@ -1361,6 +1415,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public boolean onCreateOptionsMenu(Menu menu) {
 
         getMenuInflater().inflate(R.menu.search_menu, menu);
+        this.menu = menu;
         return true;
     }
 
@@ -1373,20 +1428,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         MatrixCursor cursor = new MatrixCursor(columns);
 
+        ArrayList<String> tep=new ArrayList<>();
+
 
 
         for(int i = 0; i < hmsgsndrs.size();i++) {
-            Log.i("hms",hmsgsndrs.get(i));
 
 
-            if(hmsgsndrs.get(i).contains(query)) {
+            String x = hmsgsndrs.get(i);
+            if (contacts_for_db.containsKey(x)) {
+                String name = contacts_for_db.get(x);
 
-                temp[0] = i;
-                temp[1] = hmsgsndrs.get(i);//replaced s with i as s not used anywhere.
 
-                cursor.addRow(temp);
+                if (name.toLowerCase().contains(query.toLowerCase())) {
+
+                    Log.i("hms", x + " " + query);
+                    tep.add(x);
+
+                    temp[0] = i;
+                    temp[1] = x;//replaced s with i as s not used anywhere.
+
+                    cursor.addRow(temp);
+                }
+
             }
-
         }
 
         // SearchView
@@ -1395,7 +1460,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         final SearchView search = (SearchView) menu.findItem(R.id.search).getActionView();
 
 
-        search.setSuggestionsAdapter(new SearchAdapter(this, cursor, hmsgsndrs));
+        search.setSuggestionsAdapter(new SearchAdapter(this, cursor, tep));
 
     }
 
@@ -1403,10 +1468,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         private ArrayList<String> items;
 
         private TextView text;
+        private String number;
 
         public SearchAdapter(Context context, Cursor cursor, ArrayList<String> items) {
 
-            super(context, cursor, false);
+            super(context, cursor, true);
 
             this.items = items;
 
@@ -1415,7 +1481,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
 
-            text.setText(items.get(cursor.getPosition()));
+            number=items.get(cursor.getPosition());
+
+            String name=contacts_for_db.get(number);
+            text.setText(name);
 
         }
 
@@ -1432,7 +1501,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             text.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    String p=text.getText().toString();
+                    String p=number;
                     String name=null;
                     if(contacts_for_db.containsKey(p))
                         name=contacts_for_db.get(p);
@@ -1466,6 +1535,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Log.i("search","x");
                 startActivity(new Intent(getApplicationContext(),Analytics.class));
                 break;
+
             case R.id.search:
                 Log.i("search","y");
                 SearchManager manager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
@@ -1479,7 +1549,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     @Override
                     public boolean onQueryTextSubmit(String query) {
 
-                        return false;
+                        loadHistory(query);
+
+                        return true;
                     }
 
                     @Override
